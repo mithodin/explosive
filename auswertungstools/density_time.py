@@ -66,8 +66,8 @@ dens[1] = array([float(elem)/float(binheight*width*(stepsize+steps)) for elem in
 densities[len(densities)-1] = dens
 
 output = open("time-density.dat","w")
-output.write("#MC Step (lower)\tz (lower)\trho1\trho2\n")
+output.write("z (middle)\trho1\trho2\t#MC Step (lower)\n")
 for i,dens in enumerate(densities):
 	for j in range(len(dens[0])):
-		output.write("{:d}\t{:.1f}\t{:.5e}\t{:.5e}\n".format(i*movie_stepsize*stepsize,j*binheight,dens[0][j],dens[1][j]))
+		output.write("{:.1f}\t{:.5e}\t{:.5e}\t{:d}\n".format((j+0.5)*binheight,dens[0][j],dens[1][j],i*movie_stepsize*stepsize))
 output.close()
