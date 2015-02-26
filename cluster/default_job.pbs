@@ -1,0 +1,31 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=8,walltime=500:00:00
+#PBS -m ae
+#PBS -M s1lutref@stmail.uni-bayreuth.de
+
+export PATH=$PATH:/home/nuss/s1lutref/bin/bin
+export TMPDIR=/tmp/s1lutref_`tr -dc a-z </dev/urandom 2> /dev/null | head -c 20`
+name=${PBS_O_WORKDIR##*/}
+THREADS=8
+
+echo "creating $TMPDIR"
+mkdir $TMPDIR
+
+cd $PBS_O_WORKDIR
+cp /home/nuss/s1lutref/cluster/colloids/code/bin/patchy_main $TMPDIR
+cp ./parameters.cfg $TMPDIR
+
+echo "environment prepared, starting main simulation"
+
+cd $TMPDIR
+date
+./patchy_main $THREADS
+date
+
+echo "exporting results."
+mkdir /scratch/s1lutref/colloids/$name
+tar cf /scratch/s1lutref/colloids/$name/results.tar ./*
+echo "done."
+
+cd $PBS_O_WORKDIR
+rm -rf $TMPDIR
