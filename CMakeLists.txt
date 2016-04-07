@@ -1,14 +1,16 @@
-cmake_minimum_required(VERSION 2.6)
-project(patchy)
+cmake_minimum_required(VERSION 3.5)
+project(explosive)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
-include_directories("/Users/ltref/Documents/bachelor_project/libraries/include")
-link_directories("/Users/ltref/Documents/bachelor_project/libraries/lib")
+include_directories("libraries/include")
+link_directories("libraries/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../bin/")
-set(CMAKE_C_FLAGS "-msse2 -O4")
+set(CMAKE_C_FLAGS "-O2 -march=native -std=gnu99")
 add_definitions(-DDSFMT_MEXP=19937 -DHAVE_SSE2)
-add_executable(patchy_main dSFMT/dSFMT.c patchy_main.c load_config.c initialize.c distance.c colloid.c monte_carlo.c statistics.c threaded.c)
-target_link_libraries(patchy_main config m pthread)
+add_executable(explosive dSFMT/dSFMT.c explosive.c distance.c colloid.c monte_carlo.c)
+target_link_libraries(explosive config m)
 
-set_property( TARGET patchy_main APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
+set_property( TARGET explosive APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
+
+cmake_policy(VERSION 3.5)
