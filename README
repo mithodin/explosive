@@ -1,1 +1,8 @@
 Hello. This is the source code directory of Lucas Treffenstädt's master thesis.
+
+To compile, create build directory, cd to it and run
+  cmake ..
+followed by
+  make
+then cd to the bin directory and run the simulation
+  ./explosive
