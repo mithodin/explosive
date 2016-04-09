@@ -3,23 +3,14 @@
 #include <sys/time.h>
 #include <x86intrin.h>
 #include <stdbool.h>
+#include "config.h"
 #include "colloid.h"
 #include "monte_carlo.h"
 #include "dSFMT/dSFMT.h"
 
 int get_random_seed(void);
 
-const double colloid_diameter=1.0;
-const double colloid_patch_diameter=0.11965683746373795115;
-const double colloid_min_bond_dist=1.11965683746373795115;
-const double energy_well_depth=0.5;
-const double energy_bond=1.0;
-const double onethirdpi=1.04719755119659763132;
-const double twothirdspi=2.09439510239319526264;
-const int num_particles=2;
-
-extern Colloid *particles;
-
+Colloid particles[NUMBER_OF_PARTICLES]; /**< stores all the particles */
 dsfmt_t rng; /**< stores the RNG state */
 
 int main(void){

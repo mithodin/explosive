@@ -1,11 +1,12 @@
 #include <math.h>
 #include <x86intrin.h>
 #include <stdbool.h>
+#include "config.h"
 #include "dSFMT/dSFMT.h"
-#include "monte_carlo.h"
 #include "colloid.h"
-#include "parameters.h"
-#include "distance.h"
+#include "globals.h"
+#include "monte_carlo.h"
+#include "geometry.h"
 
 double monte_carlo_step(double, double);
 bool mc_energy_change(vector2d, double, int, int*, int*);
@@ -15,18 +16,30 @@ void mc_init_acceptance_probabilities(double);
 
 double acceptance_probabilities_bonds[7];
 double acceptance_probabilities_well[3];
-Colloid *particles;
 
 double monte_carlo_step(double max_displacement, double max_rotation){
-	for(int i=1;i<num_particles;++i){
+	for(int i=1;i<NUMBER_OF_PARTICLES;++i){
 		vector2d new_position;
 		new_position[0]=particles[i].position[0]+max_displacement*(dsfmt_genrand_open_close(&rng)-0.5);
+		#ifndef PERIODIC_X
+		if(new_position[0] < 0 || new_position[0] > SIZE_X){
+			continue;
+		}
+		#endif
 		new_position[1]=particles[i].position[1]+max_displacement*(dsfmt_genrand_open_close(&rng)-0.5);
+		#ifndef PERIODIC_Y
+		if(new_position[1] < 0 || new_position[1] > SIZE_Y){
+			continue;
+		}
+		#endif
+		#if defined(PERIODIC_X) || defined(PERIODIC_Y)
+		make_periodic(&new_position);
+		#endif
 		double new_phi=angle_twopi(particles[i].phi+max_rotation*(dsfmt_genrand_open_close(&rng)-0.5));
 
 		int du_ext=0;
 		int du_int=0;
-		if(mc_energy_change(new_position,new_phi,i,&du_ext,&du_int) && ( du_ext*energy_well_depth+du_int*energy_bond <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability(du_ext, du_int) ) ){
+		if(mc_energy_change(new_position,new_phi,i,&du_ext,&du_int) && ( du_ext*ENERGY_WELL_DEPTH+du_int*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability(du_ext, du_int) ) ){
 			particles[i].position=new_position;
 			particles[i].phi=new_phi;
 		}
@@ -44,14 +57,11 @@ double mc_run(int steps){
 }
 
 bool mc_energy_change(vector2d new_position, double new_phi, int i, int *e_ext, int *e_int){
-	if(new_position[0] > SIZE_X || new_position[0] < 0 || new_position[1] > SIZE_Y || new_position[1] < 0){
-		return false;
-	}
 	*e_ext=0;
 	*e_int=0;
 	double d=0;
 	distance(particles[0].position,particles[1].position,&d);
-	return d>colloid_diameter;
+	return d>COLLOID_DIAMETER;
 }
 
 double mc_acceptance_probability(int du_ext, int du_int){
@@ -60,15 +70,14 @@ double mc_acceptance_probability(int du_ext, int du_int){
 
 void mc_init_acceptance_probabilities(double kbt){
 	for(int du_ext=-1;du_ext<=1;++du_ext){
-		acceptance_probabilities_well[1+du_ext]=exp(-du_ext*energy_well_depth/kbt);
+		acceptance_probabilities_well[1+du_ext]=exp(-du_ext*ENERGY_WELL_DEPTH/kbt);
 	}
 	for(int du_int=-3;du_int<=3;++du_int){
-		acceptance_probabilities_bonds[3+du_int]=exp(-du_int*energy_bond/kbt);
+		acceptance_probabilities_bonds[3+du_int]=exp(-du_int*ENERGY_BOND/kbt);
 	}
 }
 
 void mc_init_particles(void){
-	particles=calloc(2,sizeof(Colloid));
 	particles[0].position[0]=0.0;
 	particles[0].position[1]=0.0;
 	particles[0].phi=0.0;
