@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.3)
 project(explosive)
 
 #set(CMAKE_BUILD_TYPE Debug)
@@ -8,9 +8,9 @@ link_directories("libraries/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../bin/")
 set(CMAKE_C_FLAGS "-O2 -march=native -std=gnu99")
 add_definitions(-DDSFMT_MEXP=19937 -DHAVE_SSE2)
-add_executable(explosive dSFMT/dSFMT.c explosive.c geometry.c colloid.c monte_carlo.c)
-target_link_libraries(explosive m)
+add_executable(explosive dSFMT/dSFMT.c explosive.c geometry.c colloid.c monte_carlo.c hdf5_logging.c)
+target_link_libraries(explosive m hdf5 hdf5_hl)
 
 set_property( TARGET explosive APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
 
-cmake_policy(VERSION 3.5)
+cmake_policy(VERSION 3.3)
