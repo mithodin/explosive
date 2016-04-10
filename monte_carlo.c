@@ -1,9 +1,10 @@
 #include <math.h>
 #include <x86intrin.h>
 #include <stdbool.h>
-#include "config.h"
 #include "dSFMT/dSFMT.h"
+#include "config.h"
 #include "colloid.h"
+#include "logger.h"
 #include "globals.h"
 #include "monte_carlo.h"
 #include "geometry.h"
@@ -50,8 +51,13 @@ double monte_carlo_step(double max_displacement, double max_rotation){
 double mc_run(int steps){
 	double md=0.01;
 	double mr=M_PI/10.0;
-	for(int i=0;i<steps;++i){
-		monte_carlo_step(md,mr);
+	log_enqueue(0,false);
+	for(int i=0;i<steps;){
+		for(int j=0;j<LOGGING_INTERVAL && i<steps;++j){
+			monte_carlo_step(md,mr);
+			++i;
+		}
+		log_enqueue(i,i==steps);
 	}
 	return 1.0;
 }

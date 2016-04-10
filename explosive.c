@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "config.h"
 #include "colloid.h"
+#include "logger.h"
 #include "monte_carlo.h"
 #include "dSFMT/dSFMT.h"
 
@@ -16,13 +17,11 @@ dsfmt_t rng; /**< stores the RNG state */
 int main(void){
 	dsfmt_init_gen_rand(&rng,get_random_seed()); //initialize the rng
 
-	mc_init(1.0);
-	bool bonded=false;
-	while(!bonded){
-		mc_run(1);
-		bonded=colloid_bonded(&particles[0],&particles[1]);
-		printf("%1.5f\t%1.5f\t%1.5f\t%1.5f\t%1.5f\t%1.5f\t%d\n",particles[0].position[0],particles[0].position[1],particles[0].phi,particles[1].position[0],particles[1].position[1],particles[1].phi,bonded?1:0);
-	}
+	double kbt=TEMPERATURE;
+	mc_init(kbt);
+	log_init();
+	mc_run(MONTE_CARLO_STEPS_MAIN);
+	log_close();
 	return 0;
 }
 

@@ -1,12 +1,19 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
-#include "hdf5_logging.h"
+#include <x86intrin.h>
+#include <string.h>
+#include "dSFMT/dSFMT.h"
+#include "config.h"
+#include "colloid.h"
 #include "globals.h"
+#include "hdf5_logging.h"
 
-#define LOG_BUFFER_SIZE;
+#define LOG_BUFFER_SIZE 5
 
-pthead_t log_thread_id;
+void *log_logging(void *);
+
+pthread_t log_thread_id;
 sem_t log_buffer_full;
 sem_t log_buffer_empty;
 int log_buffer_write_index;
@@ -49,4 +56,9 @@ void log_enqueue(int mc_time, bool simulation_done){
 	}
 	log_buffer_write_index=(log_buffer_write_index+1)%LOG_BUFFER_SIZE;
 	sem_post(&log_buffer_empty);
+}
+
+void log_close(void){
+	pthread_join(log_thread_id,NULL);
+	h5log_close();
 }

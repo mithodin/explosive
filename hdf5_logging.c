@@ -106,7 +106,7 @@ void h5log_init(void){
 	                        simframe_type,
 	                        10,
 	                        NULL,
-	                        0,
+	                        5,
 	                        NULL);
 	if(status < 0){ printf("> H5Log experienced an error creating the framelog table\n"); }
 }
