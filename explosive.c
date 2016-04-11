@@ -19,9 +19,9 @@ int main(void){
 
 	double kbt=TEMPERATURE;
 	mc_init(kbt);
-	log_init();
+	if( !log_init() ){ printf("> log_init() failed.\n"); return -1; }
 	mc_run(MONTE_CARLO_STEPS_MAIN);
-	log_close();
+	if( !log_close()){ printf("> log_close() failed.\n"); return -1; }
 	return 0;
 }
 

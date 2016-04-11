@@ -3,6 +3,7 @@
 #include <hdf5_hl.h>
 #include <x86intrin.h>
 #include <stdbool.h>
+#include <unistd.h>
 #include "config.h"
 #include "colloid.h"
 #include "simulation_frame.h"
@@ -14,65 +15,77 @@ char simulation_frames_location[120];
 size_t simframe_size;
 size_t simframe_offsets[5];
 
-void h5log_init(void){
+bool h5log_init(void){
 	herr_t status;
 
-	logfile = H5Fopen(LOGFILE, H5F_ACC_RDWR, H5P_DEFAULT);
-	if(logfile < 0){ //file does not exist
+	if( access( LOGFILE, F_OK ) == 0 ){
+		logfile = H5Fopen(LOGFILE, H5F_ACC_RDWR, H5P_DEFAULT);
+		if(logfile < 0){
+			return false;
+		}
+	}else{ //file does not exist
 		logfile = H5Fcreate(LOGFILE, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 		if(logfile < 0){
 			printf("> H5Log cannot open a file to log this simulation\n");
+			return false;
 		}
 	}
 
 	//create group
 	snprintf(directory_name, sizeof(directory_name), "/%.100s", SIMULATION_SHORT_NAME);
-	snprintf(simulation_frames_location, sizeof(simulation_frames_location), "/%.100s/simulation_frames", SIMULATION_SHORT_NAME);
 
+	int dir_exists_index=0;
+	while(H5Lexists(logfile, directory_name, H5P_DEFAULT)){
+		snprintf(directory_name, sizeof(directory_name), "/%.94s_%05d", SIMULATION_SHORT_NAME, dir_exists_index++);
+	}
+	snprintf(simulation_frames_location, sizeof(simulation_frames_location), "%.101s/simulation_frames", directory_name);
 	group = H5Gcreate(logfile, directory_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	//create group attributes (stores simulation parameters)
 	status = H5LTset_attribute_string(group, directory_name, "simulation-name", SIMULATION_NAME);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	const unsigned int number_of_particles=NUMBER_OF_PARTICLES;
+	status = H5LTset_attribute_uint(group, directory_name, "number-of-particles", &number_of_particles, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double size_x=SIZE_X;
 	status = H5LTset_attribute_double(group, directory_name, "size-x", &size_x, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double size_y=SIZE_Y;
 	status = H5LTset_attribute_double(group, directory_name, "size-y", &size_y, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	#ifdef PERIODIC_X
 	status = H5LTset_attribute_string(group, directory_name, "periodic-x", "yes");
 	#else
 	status = H5LTset_attribute_string(group, directory_name, "periodic-x", "no");
 	#endif
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	#ifdef PERIODIC_Y
 	status = H5LTset_attribute_string(group, directory_name, "periodic-y", "yes");
 	#else
 	status = H5LTset_attribute_string(group, directory_name, "periodic-y", "no");
 	#endif
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double colloid_diameter=COLLOID_DIAMETER;
 	status = H5LTset_attribute_double(group, directory_name, "colloid-diameter", &colloid_diameter, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double colloid_patch_diameter=COLLOID_PATCH_DIAMETER;
 	status = H5LTset_attribute_double(group, directory_name, "colloid-patch-diameter", &colloid_patch_diameter, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double colloid_min_bonding_dist=COLLOID_MIN_BONDING_DISTANCE;
 	status = H5LTset_attribute_double(group, directory_name, "colloid-min-bonding-distance", &colloid_min_bonding_dist, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double energy_well_depth=ENERGY_WELL_DEPTH;
 	status = H5LTset_attribute_double(group, directory_name, "energy-well-depth", &energy_well_depth, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double energy_bond=ENERGY_BOND;
 	status = H5LTset_attribute_double(group, directory_name, "energy-bond", &energy_bond, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double temperature=TEMPERATURE;
 	status = H5LTset_attribute_double(group, directory_name, "temperature", &temperature, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const unsigned int monte_carlo_steps_main=MONTE_CARLO_STEPS_MAIN;
 	status = H5LTset_attribute_uint(group, directory_name, "monte-carlo-steps-main", &monte_carlo_steps_main, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); }
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 
 	//create simulation frame table
 	simframe_size = sizeof( SimulationFrame );
@@ -108,10 +121,11 @@ void h5log_init(void){
 	                        NULL,
 	                        5,
 	                        NULL);
-	if(status < 0){ printf("> H5Log experienced an error creating the framelog table\n"); }
+	if(status < 0){ printf("> H5Log experienced an error creating the framelog table\n"); return false; }
+	return true;
 }
 
-void h5log_log_frame(Colloid *particles, int mc_time){
+bool h5log_log_frame(Colloid *particles, int mc_time){
 	SimulationFrame sf[1];
 	sf[0].frame_index=mc_time;
 	//TODO: Calculate energy
@@ -130,14 +144,16 @@ void h5log_log_frame(Colloid *particles, int mc_time){
 	                             sizeof(sf[0].total_energy) };
 
 	herr_t status = H5TBappend_records(group, simulation_frames_location, 1, simframe_size, simframe_offsets, simframe_sizes, &sf);
-	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); }
+	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); return false; }
+	return true;
 }
 
-void h5log_close(void){
+bool h5log_close(void){
 	herr_t status;
 	
 	status = H5Gclose(group);
-	if(status < 0){ printf("> H5Log experienced an error closing the group\n"); }
+	if(status < 0){ printf("> H5Log experienced an error closing the group\n"); return false; }
 	status = H5Fclose(logfile);
-	if(status < 0){ printf("> H5Log experienced an error closing the log file\n"); }
+	if(status < 0){ printf("> H5Log experienced an error closing the log file\n"); return false; }
+	return true;
 }

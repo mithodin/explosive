@@ -1,3 +1,8 @@
 build/
 bin/explosive
+bin
 test
+tools/external_energy.dat
+tools/internal_energy.dat
+tools/movie.xyz
+tools/total_energy.dat

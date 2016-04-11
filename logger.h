@@ -1,3 +1,3 @@
-void log_init(void);
+bool log_init(void);
 void log_enqueue(int, bool);
-void log_close(void);
+bool log_close(void);
