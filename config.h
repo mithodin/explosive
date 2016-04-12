@@ -3,8 +3,8 @@
 //give a short description of the simulation
 #define SIMULATION_NAME "This is a test. Still in development."
 //width and height of the simulation box
-#define SIZE_X 15.0
-#define SIZE_Y 15.0
+#define SIZE_X 150.0
+#define SIZE_Y 150.0
 //should the box have periodic boundary conditions in x and y? #undef if not.
 #define PERIODIC_X
 #define PERIODIC_Y
@@ -16,13 +16,13 @@
 #define ENERGY_WELL_DEPTH 0.5
 #define ENERGY_BOND 1.0
 //temperature in kbT
-#define TEMPERATURE 1.0
+#define TEMPERATURE 0.1
 //how many particles?
-#define NUMBER_OF_PARTICLES 20
+#define NUMBER_OF_PARTICLES 4000
 //how many monte carlo steps?
-#define MONTE_CARLO_STEPS_MAIN 10000
+#define MONTE_CARLO_STEPS_MAIN 100000
 //in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved.
-#define LOGGING_INTERVAL 50
+#define LOGGING_INTERVAL 100
 #define LOGFILE "simulation_data.h5"
 //use these so we don't calculate them millions of times over
 #define ONE_THIRD_PI 1.04719755119659763132

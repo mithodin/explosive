@@ -38,11 +38,15 @@ vector2d distance(vector2d r1, vector2d r2, double *distance){
 	#ifdef PERIODIC_X
 	if(dist[0]>(SIZE_X/2)){
 		dist[0]-=SIZE_X;
+	}else if(dist[0]<(SIZE_X/(-2))){
+		dist[0]+=SIZE_X;
 	}
 	#endif
 	#ifdef PERIODIC_Y
 	if(dist[1]>(SIZE_Y/2)){
 		dist[1]-=SIZE_Y;
+	}else if(dist[1]<(SIZE_Y/(-2))){
+		dist[1]+=SIZE_Y;
 	}
 	#endif
 	vector2d dist_squared=_mm_mul_pd(dist,dist);
@@ -50,6 +54,11 @@ vector2d distance(vector2d r1, vector2d r2, double *distance){
 	return dist;
 }
 
+/**
+ * Constrain a vector to a box with periodic boundary conditions. Works in-place.
+ *
+ * @param r a 2d vector
+ */
 void make_periodic(vector2d *r){
 	#ifdef PERIODIC_X
 	if((*r)[0] < 0){ (*r)[0]=fmod((*r)[0],SIZE_X)+SIZE_X; }
@@ -61,6 +70,12 @@ void make_periodic(vector2d *r){
 	#endif
 }
 
+/**
+ * Make an angle fall into the interval [0;2pi]
+ *
+ * @param angle an angle in any interval
+ * @return an angle in interval [0;2pi]
+ */
 double angle_twopi(double angle){
 	if (angle>0){
 		return fmod(angle, 2.0*M_PI);
@@ -68,4 +83,23 @@ double angle_twopi(double angle){
 	else {
 		return fmod(angle, 2.0*M_PI)+2.0*M_PI;
 	}
+}
+
+/**
+ * Calculate the y distance between two points. Handles periodicity.
+ *
+ * @param y0 start point
+ * @param y1 end point
+ * @return the (periodic) distance y1-y0
+ */
+double distance_y(double y0, double y1){
+	double dy=y1-y0;
+	#ifdef PERIODIC_Y
+	if(dy>(SIZE_Y/2)){
+		dy-=SIZE_Y;
+	}else if(dy<(SIZE_Y/(-2))){
+		dy+=SIZE_Y;
+	}
+	#endif
+	return dy;
 }

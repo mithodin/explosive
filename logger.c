@@ -74,3 +74,18 @@ bool log_close(void){
 	}
 	return h5log_close();
 }
+
+void mkpercent(char *buf, int len, double perc){
+	buf[0]='[';
+	buf[len-2]=']';
+	buf[len-1]='\0';
+	for(int i=1;i<len-2;++i){
+		if(i-1<(int)ceil(perc*(len-3))){
+			buf[i]='=';
+		}else if(i-1==(int)ceil(perc*(len-3))){
+			buf[i]='>';
+		}else{
+			buf[i]=' ';
+		}
+	}
+}

@@ -17,6 +17,12 @@ typedef struct _colloid {
 	struct _colloid *above;
 	struct _colloid *below;
 	int external_energy;
+	int internal_energy;
 } Colloid;
 
-bool colloid_bonded(Colloid *, Colloid *);
+bool colloid_bonded(Colloid *, Colloid *, bool*, int*, int*);
+void init_ysorted_list(void);
+void insert_sorted_y(Colloid *, Colloid *);
+void init_bonding_partners(void);
+
+#define EMPTY_COLLOID {{0.0,0.0},0.0,{NULL,NULL,NULL},{-1,-1,-1},NULL,NULL,0.0,0.0}
