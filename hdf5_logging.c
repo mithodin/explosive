@@ -128,15 +128,16 @@ bool h5log_init(void){
 bool h5log_log_frame(Colloid *particles, int mc_time){
 	SimulationFrame sf[1];
 	sf[0].frame_index=mc_time;
-	//TODO: Calculate energy
 	sf[0].internal_energy=0.0;
 	sf[0].external_energy=0.0;
-	sf[0].total_energy=0.0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+		sf[0].internal_energy+=ENERGY_BOND*particles[i].internal_energy/2.0;
+		sf[0].external_energy+=ENERGY_WELL_DEPTH*particles[i].external_energy;
 		sf[0].position[i][0]=particles[i].position[0];
 		sf[0].position[i][1]=particles[i].position[1];
 		sf[0].position[i][2]=particles[i].phi;
 	}
+	sf[0].total_energy=sf[0].internal_energy+sf[0].external_energy;
 	size_t simframe_sizes[5] = { sizeof(sf[0].position),
 	                             sizeof(sf[0].frame_index),
 	                             sizeof(sf[0].internal_energy),

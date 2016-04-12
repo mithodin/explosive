@@ -8,6 +8,7 @@
 #include "logger.h"
 #include "monte_carlo.h"
 #include "dSFMT/dSFMT.h"
+#include "substrate.h"
 
 int get_random_seed(void);
 
@@ -19,6 +20,7 @@ int main(void){
 
 	double kbt=TEMPERATURE;
 	mc_init(kbt);
+	init_substrate();
 	if( !log_init() ){ printf("> log_init() failed.\n"); return -1; }
 	mc_run(MONTE_CARLO_STEPS_MAIN);
 	if( !log_close()){ printf("> log_close() failed.\n"); return -1; }
