@@ -1,7 +1,7 @@
 //give a short name for your simulation. No spaces!
 #define SIMULATION_SHORT_NAME "test"
 //give a short description of the simulation
-#define SIMULATION_NAME "This is a test"
+#define SIMULATION_NAME "This is a test. Still in development."
 //width and height of the simulation box
 #define SIZE_X 15.0
 #define SIZE_Y 15.0
