@@ -19,7 +19,7 @@ double acceptance_probabilities_bonds[7];
 double acceptance_probabilities_well[3];
 
 double monte_carlo_step(double max_displacement, double max_rotation){
-	for(int i=1;i<NUMBER_OF_PARTICLES;++i){
+	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		vector2d new_position;
 		new_position[0]=particles[i].position[0]+max_displacement*(dsfmt_genrand_open_close(&rng)-0.5);
 		#ifndef PERIODIC_X
@@ -49,7 +49,7 @@ double monte_carlo_step(double max_displacement, double max_rotation){
 }
 
 double mc_run(int steps){
-	double md=0.01;
+	double md=0.1;
 	double mr=M_PI/10.0;
 	log_enqueue(0,false);
 	for(int i=0;i<steps;){
@@ -66,8 +66,14 @@ bool mc_energy_change(vector2d new_position, double new_phi, int i, int *e_ext, 
 	*e_ext=0;
 	*e_int=0;
 	double d=0;
-	distance(particles[0].position,particles[1].position,&d);
-	return d>COLLOID_DIAMETER;
+	for(int j=0;j<NUMBER_OF_PARTICLES;++j){
+		if(j==i) continue;
+		distance(particles[i].position,particles[j].position,&d);
+		if(d<COLLOID_DIAMETER){
+			return false;
+		}
+	}
+	return true;
 }
 
 double mc_acceptance_probability(int du_ext, int du_int){
@@ -84,12 +90,23 @@ void mc_init_acceptance_probabilities(double kbt){
 }
 
 void mc_init_particles(void){
-	particles[0].position[0]=0.0;
-	particles[0].position[1]=0.0;
-	particles[0].phi=0.0;
-	particles[1].position[0]=1.0;
-	particles[1].position[1]=1.0;
-	particles[1].phi=M_PI;
+	double d;
+	bool collision=false;
+	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+		do{
+			particles[i].position[0]=SIZE_X*dsfmt_genrand_open_close(&rng);
+			particles[i].position[1]=SIZE_Y*dsfmt_genrand_open_close(&rng);
+			particles[i].phi=2.0*M_PI*dsfmt_genrand_open_close(&rng);
+			collision=false;
+			for(int j=0;j<i;++j){
+				distance(particles[i].position,particles[j].position,&d);
+				if(d<COLLOID_DIAMETER){
+					collision=true;
+					break;
+				}
+			}
+		}while(collision==true);
+	}
 }
 
 void mc_init(double kbt){
