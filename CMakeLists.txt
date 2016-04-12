@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 2.8.1)
 project(explosive)
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -13,4 +13,4 @@ target_link_libraries(explosive m hdf5 hdf5_hl pthread)
 
 set_property( TARGET explosive APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
 
-cmake_policy(VERSION 3.3)
+cmake_policy(VERSION 2.8.1)
