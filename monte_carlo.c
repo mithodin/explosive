@@ -75,7 +75,7 @@ double monte_carlo_step(double max_displacement, double max_rotation){
 }
 
 double mc_run(int steps){
-	char percent_complete[53];
+	char percent_complete[103];
 	double md=0.1;
 	double mr=M_PI/10.0;
 	double complete=0.0;
@@ -86,7 +86,7 @@ double mc_run(int steps){
 			++i;
 		}
 		complete=1.0*i/steps;
-		mkpercent(percent_complete,53,complete);
+		mkpercent(percent_complete,103,complete);
 		printf("\r> running %s %3d%% complete",percent_complete,(int)floor(100*complete));
 		fflush(NULL);
 		log_enqueue(i,i==steps);
