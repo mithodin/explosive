@@ -1,7 +1,7 @@
 //give a short name for your simulation. No spaces!
-#define SIMULATION_SHORT_NAME "many_particles"
+#define SIMULATION_SHORT_NAME "one_patch_long"
 //give a short description of the simulation
-#define SIMULATION_NAME "This is a test. Still in development."
+#define SIMULATION_NAME "Long simulation time"
 //width and height of the simulation box
 #define SIZE_X 150.0
 #define SIZE_Y 150.0
@@ -20,9 +20,9 @@
 //how many particles?
 #define NUMBER_OF_PARTICLES 8000
 //how many monte carlo steps?
-#define MONTE_CARLO_STEPS_MAIN 10000
+#define MONTE_CARLO_STEPS_MAIN 2000000
 //in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved.
-#define LOGGING_INTERVAL 100
+#define LOGGING_INTERVAL 1000
 #define LOGFILE "simulation_data.h5"
 //use these so we don't calculate them millions of times over
 #define ONE_THIRD_PI 1.04719755119659763132
