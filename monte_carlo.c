@@ -1,4 +1,7 @@
+/** @file */
+
 #include <math.h>
+#include <sys/time.h>
 #include <x86intrin.h>
 #include <stdbool.h>
 #include "dSFMT/dSFMT.h"
@@ -10,16 +13,24 @@
 #include "geometry.h"
 #include "substrate.h"
 
-double monte_carlo_step(double, double);
+double monte_carlo_step(void);
 bool mc_energy_change(Colloid *, int);
 double mc_acceptance_probability(int, int);
 void mc_init_particles(void);
 void mc_init_acceptance_probabilities(double);
+void mc_init_max_displacement(double);
 
-double acceptance_probabilities_bonds[7];
-double acceptance_probabilities_well[3];
+double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
+double acceptance_probabilities_well[3]; /**< pre-calculated acceptance probabilities for entering and leaving a well on the substrate */
+double max_displacement=0.1; /**< maximum displacement in either coordinate during one mc move */
+double max_rotation=M_PI; /**< maximum rotation during one mc move */ 
 
-double monte_carlo_step(double max_displacement, double max_rotation){
+/**
+ * Do one monte carlo step (try one move for every particle)
+ *
+ * @return The acceptance probability
+ */
+double monte_carlo_step(void){
 	int accept=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
@@ -74,30 +85,51 @@ double monte_carlo_step(double max_displacement, double max_rotation){
 	return 1.0*accept/NUMBER_OF_PARTICLES;
 }
 
-double mc_run(int steps){
-	char percent_complete[53];
-	double md=0.1;
-	double mr=M_PI/10.0;
+/**
+ * Run some monte carlo steps
+ *
+ * @param steps How many steps to run
+ * @param log Whether or not to log this run in the results file
+ * @return The acceptance probability
+ */
+double mc_run(int steps, bool log){
+	char percent_complete[103];
 	double complete=0.0;
-	log_enqueue(0,false);
+	double acceptance_probability=0.0;
+	unsigned long runtime;
+	struct timeval t;
+	if(log){
+		gettimeofday(&t,NULL);
+		log_enqueue(0,false,(unsigned long)(t.tv_sec-sim_start_time.tv_sec));
+	}
 	for(int i=0;i<steps;){
 		for(int j=0;j<LOGGING_INTERVAL && i<steps;++j){
-			monte_carlo_step(md,mr);
+			acceptance_probability+=monte_carlo_step();
 			++i;
 		}
-		complete=1.0*i/steps;
-		mkpercent(percent_complete,53,complete);
-		printf("\r> running %s %3d%% complete",percent_complete,(int)floor(100*complete));
-		fflush(NULL);
-		log_enqueue(i,i==steps);
+		if(log){
+			gettimeofday(&t,NULL);
+			runtime=(unsigned long)(t.tv_sec-sim_start_time.tv_sec);
+			log_enqueue(i,i==steps,runtime);
+			complete=1.0*i/steps;
+			mkpercent(percent_complete,103,complete);
+			printf("\r> running %lds %s %3d%% complete",runtime,percent_complete,(int)floor(100*complete));
+			fflush(NULL);
+		}
 	}
-	printf("\n");
-	return 1.0;
+	if(log) printf("\n");
+	return acceptance_probability/steps;
 }
 
+/**
+ * Calculate the internal and external energy for the new particle
+ *
+ * @param new The new colloid
+ * @param i Index of the soon-to-be-updated particle
+ * @return Was there a collision?
+ */
 bool mc_energy_change(Colloid *new, int i){
 	new->external_energy=external_energy(new->position);
-	new->internal_energy=0;
 	bool collision;
 	int site1;
 	int site2;
@@ -134,10 +166,22 @@ bool mc_energy_change(Colloid *new, int i){
 	return true;
 }
 
+/**
+ * Calculate the acceptance probability for a given energy change
+ *
+ * @param du_ext Has the particle entered (-1) or left (+1) a well on the substrate?
+ * @param du_int Have the bonds of the particle changed?
+ * @return a number between 0.0 and 1.0
+ */
 double mc_acceptance_probability(int du_ext, int du_int){
 	return acceptance_probabilities_well[1+du_ext]*acceptance_probabilities_bonds[3+du_int];
 }
 
+/**
+ * Precalculate the acceptance probabilities so we don't have to evaluate millions of exp()s.
+ *
+ * @param kbt The temperature of the system
+ */
 void mc_init_acceptance_probabilities(double kbt){
 	for(int du_ext=-1;du_ext<=1;++du_ext){
 		acceptance_probabilities_well[1+du_ext]=exp(-du_ext*ENERGY_WELL_DEPTH/kbt);
@@ -147,7 +191,12 @@ void mc_init_acceptance_probabilities(double kbt){
 	}
 }
 
+/**
+ * Place particles randomly in the box
+ */
 void mc_init_particles(void){
+	printf("> initializing particles... ");
+	fflush(NULL);
 	double d;
 	bool collision=false;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
@@ -163,13 +212,69 @@ void mc_init_particles(void){
 					break;
 				}
 			}
-		}while(collision==true);
+		}while(collision);
+		particles[i].external_energy=0;
 	}
 	init_ysorted_list();
 	init_bonding_partners();
+	printf("done.\n");
 }
 
+/**
+ * Tune maximum displacement and rotation so that a target acceptance rate is met.
+ *
+ * @param target_acceptance_rate The required acceptance rate
+ */
+void mc_init_max_displacement(double target_acceptance_rate){
+	printf("> initializing maximum displacement... ");
+	fflush(NULL);
+	double md_tmp=max_displacement;
+	double tar_sqrt=sqrt(target_acceptance_rate);
+	double acceptance_rate=mc_run(100,false);
+	int i=0,j=0;
+	while( j < 10 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
+		md_tmp=max_displacement;
+		max_displacement=0.0;
+		acceptance_rate=mc_run(100,false);
+		i=0;
+		while(max_rotation<2.0*M_PI && i < 100 && fabs(acceptance_rate-tar_sqrt)/tar_sqrt > 0.01){
+			max_rotation*=acceptance_rate/tar_sqrt;
+			acceptance_rate=mc_run(100,false);
+			++i;
+		}
+		max_displacement=md_tmp;
+		acceptance_rate=mc_run(100,false);
+		i=0;
+		while( i < 100 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
+			max_displacement*=acceptance_rate/target_acceptance_rate;
+			acceptance_rate=mc_run(100,false);
+			++i;
+		}
+		++j;
+	}
+	if(j==10 || i==100){
+		printf("[too many iterations] ");
+	}
+	printf("done.\n");
+}
+
+/**
+ * Initialize the monte carlo subsystem including:
+ *  - the substrate
+ *  - the particles
+ *  - the acceptance probabilities
+ *  - the maximum displacement and rotation
+ *
+ * @param kbt The temperature of the system
+ */
 void mc_init(double kbt){
+	init_substrate();
 	mc_init_particles();
+
+	//thermalize
+	mc_init_acceptance_probabilities(2.0);
+	mc_run(100,false);
+
 	mc_init_acceptance_probabilities(kbt);
+	mc_init_max_displacement(0.5);
 }

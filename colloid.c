@@ -1,3 +1,5 @@
+/** @file */
+
 #include <math.h>
 #include <stdbool.h>
 #include <x86intrin.h>

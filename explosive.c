@@ -1,3 +1,8 @@
+/**
+ * @file explosive.c
+ * @brief The main program
+ */
+
 #include <stdio.h>
 #include <math.h>
 #include <sys/time.h>
@@ -8,21 +13,27 @@
 #include "logger.h"
 #include "monte_carlo.h"
 #include "dSFMT/dSFMT.h"
-#include "substrate.h"
 
 int get_random_seed(void);
 
+//globals
 Colloid particles[NUMBER_OF_PARTICLES]; /**< stores all the particles */
 dsfmt_t rng; /**< stores the RNG state */
+struct timeval sim_start_time; /**< stores the start of the simulation */
 
 int main(void){
+	gettimeofday(&sim_start_time,NULL);
 	dsfmt_init_gen_rand(&rng,get_random_seed()); //initialize the rng
 
 	double kbt=TEMPERATURE;
+	double paccept;
 	mc_init(kbt);
-	init_substrate();
 	if( !log_init() ){ printf("> log_init() failed.\n"); return -1; }
-	mc_run(MONTE_CARLO_STEPS_MAIN);
+	paccept=mc_run(MONTE_CARLO_STEPS_MAIN,true);
+
+	struct timeval sim_end_time;
+	gettimeofday(&sim_end_time,NULL);
+	log_simulation_stats((unsigned long)(sim_end_time.tv_sec-sim_start_time.tv_sec), paccept);
 	if( !log_close()){ printf("> log_close() failed.\n"); return -1; }
 	return 0;
 }

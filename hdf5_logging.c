@@ -1,3 +1,5 @@
+/** @file */
+
 #include <stdio.h>
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -13,8 +15,12 @@ hid_t group;
 char directory_name[102];
 char simulation_frames_location[120];
 size_t simframe_size;
-size_t simframe_offsets[5];
+size_t simframe_offsets[6];
 
+/**
+ * Initialize the hdf5 log file. Set up groups and tables as well as attributes
+ * @return Did the initialization succeed?
+ */
 bool h5log_init(void){
 	herr_t status;
 
@@ -86,6 +92,9 @@ bool h5log_init(void){
 	const unsigned int monte_carlo_steps_main=MONTE_CARLO_STEPS_MAIN;
 	status = H5LTset_attribute_uint(group, directory_name, "monte-carlo-steps-main", &monte_carlo_steps_main, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	const unsigned long dummy=0;
+	status = H5LTset_attribute_ulong(group, directory_name, "total-execution-time", &dummy, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 
 	//create simulation frame table
 	simframe_size = sizeof( SimulationFrame );
@@ -94,12 +103,14 @@ bool h5log_init(void){
 	simframe_offsets[2] = HOFFSET( SimulationFrame, internal_energy );
 	simframe_offsets[3] = HOFFSET( SimulationFrame, external_energy );
 	simframe_offsets[4] = HOFFSET( SimulationFrame, total_energy );
-	const char *simframe_field_names[5] = { "position",
+	simframe_offsets[5] = HOFFSET( SimulationFrame, realtime_seconds );
+	const char *simframe_field_names[6] = { "position",
 	                                        "frame_index",
 	                                        "internal_energy",
 	                                        "external_energy",
-	                                        "total_energy" };
-	hid_t simframe_type[5];
+	                                        "total_energy",
+						"realtime_seconds"};
+	hid_t simframe_type[6];
 	hsize_t flarray_dims[2] = {NUMBER_OF_PARTICLES, 3};
 	hid_t flarray_type = H5Tarray_create( H5T_NATIVE_FLOAT, 2, flarray_dims );
 	simframe_type[0]=flarray_type;
@@ -107,27 +118,60 @@ bool h5log_init(void){
 	simframe_type[2]=H5T_NATIVE_DOUBLE;
 	simframe_type[3]=H5T_NATIVE_DOUBLE;
 	simframe_type[4]=H5T_NATIVE_DOUBLE;
+	simframe_type[5]=H5T_NATIVE_ULONG;
 
-	status = H5TBmake_table("Simulation Frames",
-	                        group,
-	                        simulation_frames_location,
-	                        5,
-	                        0,
-	                        simframe_size,
-	                        simframe_field_names,
-	                        simframe_offsets,
-	                        simframe_type,
-	                        10,
-	                        NULL,
-	                        5,
-	                        NULL);
+	status = H5TBmake_table("Simulation Frames", //table title
+	                        group, //parent node
+	                        simulation_frames_location, //path of the dataset
+	                        6, //number of fields
+	                        0, //number of initial records
+	                        simframe_size, //total size of one record
+	                        simframe_field_names, //names of the fields
+	                        simframe_offsets, //offsets of the fields
+	                        simframe_type, //array of types of the fields
+	                        20, //chunk size
+	                        NULL, //fill data?
+	                        5, //compression level (0-9)
+	                        NULL); //initial data
 	if(status < 0){ printf("> H5Log experienced an error creating the framelog table\n"); return false; }
 	return true;
 }
 
-bool h5log_log_frame(Colloid *particles, int mc_time){
+/**
+ * Log the execution time of the simulation
+ * @param execution_time Real execution time in seconds
+ * @return Could the time be successfully written to the log?
+ */
+bool h5log_log_final_time(unsigned long execution_time){
+	printf("> Total execution time: %ld seconds\n",execution_time);
+	herr_t status = H5LTset_attribute_ulong(group, directory_name, "total-execution-time", &execution_time, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	return true;
+}
+
+/**
+ * Log the overall acceptance probability
+ * @param acceptance_probability Average acceptance probability between 1.0 and 0.0.
+ * @return Could it be successfully written to the log?
+ */
+bool h5log_log_acceptance_probability(double acceptance_probability){
+	printf("> Overall acceptance probability: %3.0f%%\n",acceptance_probability*100);
+	herr_t status = H5LTset_attribute_double(group, directory_name, "acceptance-probability", &acceptance_probability, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	return true;
+}
+
+/**
+ * Log one frame of the simulation
+ * @param particles An array of all particles, frozen. Only energy and position are guaranteed to be correct.
+ * @param mc_time The current monte carlo step
+ * @param execution_time Real time since start of the simulation in seconds
+ * @return Was the frame successfully logged?
+ */
+bool h5log_log_frame(Colloid *particles, int mc_time, unsigned long execution_time){
 	SimulationFrame sf[1];
 	sf[0].frame_index=mc_time;
+	sf[0].realtime_seconds=execution_time;
 	sf[0].internal_energy=0.0;
 	sf[0].external_energy=0.0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
@@ -138,17 +182,22 @@ bool h5log_log_frame(Colloid *particles, int mc_time){
 		sf[0].position[i][2]=particles[i].phi;
 	}
 	sf[0].total_energy=sf[0].internal_energy+sf[0].external_energy;
-	size_t simframe_sizes[5] = { sizeof(sf[0].position),
+	size_t simframe_sizes[6] = { sizeof(sf[0].position),
 	                             sizeof(sf[0].frame_index),
 	                             sizeof(sf[0].internal_energy),
 	                             sizeof(sf[0].external_energy),
-	                             sizeof(sf[0].total_energy) };
+	                             sizeof(sf[0].total_energy),
+				     sizeof(sf[0].realtime_seconds)};
 
 	herr_t status = H5TBappend_records(group, simulation_frames_location, 1, simframe_size, simframe_offsets, simframe_sizes, &sf);
 	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); return false; }
 	return true;
 }
 
+/**
+ * Close the logfile
+ * @return Could the log be successfully written?
+ */
 bool h5log_close(void){
 	herr_t status;
 	

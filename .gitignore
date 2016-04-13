@@ -7,3 +7,4 @@ tools/internal_energy.dat
 tools/movie.xyz
 tools/total_energy.dat
 tools/*png
+doc/
