@@ -11,6 +11,7 @@ frames=group.simulation_frames
 np.savetxt("internal_energy.dat",frames.cols.internal_energy)
 np.savetxt("external_energy.dat",frames.cols.external_energy)
 np.savetxt("total_energy.dat",frames.cols.total_energy)
+np.savetxt("cluster_size.dat",frames.cols.largest_cluster)
 
 num_particles=group._v_attrs['number-of-particles'][0]
 mc_steps=group._v_attrs['monte-carlo-steps-main'][0]

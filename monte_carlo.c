@@ -12,6 +12,7 @@
 #include "monte_carlo.h"
 #include "geometry.h"
 #include "substrate.h"
+#include "clusters.h"
 
 double monte_carlo_step(void);
 bool mc_energy_change(Colloid *, int);
@@ -19,6 +20,7 @@ double mc_acceptance_probability(int, int);
 void mc_init_particles(void);
 void mc_init_acceptance_probabilities(double);
 void mc_init_max_displacement(double);
+double timediff_seconds(struct timeval *, struct timeval *);
 
 double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
 double acceptance_probabilities_well[3]; /**< pre-calculated acceptance probabilities for entering and leaving a well on the substrate */
@@ -97,10 +99,11 @@ double mc_run(int steps, bool log){
 	double complete=0.0;
 	double acceptance_probability=0.0;
 	unsigned long runtime;
-	struct timeval t;
+	int largest_cluster;
+	struct timeval t0,t1;
 	if(log){
-		gettimeofday(&t,NULL);
-		log_enqueue(0,false,(unsigned long)(t.tv_sec-sim_start_time.tv_sec));
+		gettimeofday(&t0,NULL);
+		log_enqueue(0,false,(unsigned long)(t0.tv_sec-sim_start_time.tv_sec),0);
 	}
 	for(int i=0;i<steps;){
 		for(int j=0;j<LOGGING_INTERVAL && i<steps;++j){
@@ -108,13 +111,15 @@ double mc_run(int steps, bool log){
 			++i;
 		}
 		if(log){
-			gettimeofday(&t,NULL);
-			runtime=(unsigned long)(t.tv_sec-sim_start_time.tv_sec);
-			log_enqueue(i,i==steps,runtime);
+			gettimeofday(&t1,NULL);
+			runtime=(unsigned long)(t1.tv_sec-sim_start_time.tv_sec);
+			largest_cluster=largest_cluster_size();
+			log_enqueue(i,i==steps,runtime,largest_cluster);
 			complete=1.0*i/steps;
 			mkpercent(percent_complete,103,complete);
-			printf("\r> running %lds %s %3d%% complete",runtime,percent_complete,(int)floor(100*complete));
+			printf("\r> running %lds %s %3d%% complete. ETA: %.0fs       ",runtime,percent_complete,(int)floor(100*complete),1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0));
 			fflush(NULL);
+			t0=t1;
 		}
 	}
 	if(log) printf("\n");
@@ -213,7 +218,8 @@ void mc_init_particles(void){
 				}
 			}
 		}while(collision);
-		particles[i].external_energy=0;
+		particles[i].external_energy=external_energy(particles[i].position);
+		particles[i].particles_index=i;
 	}
 	init_ysorted_list();
 	init_bonding_partners();
@@ -277,4 +283,15 @@ void mc_init(double kbt){
 
 	mc_init_acceptance_probabilities(kbt);
 	mc_init_max_displacement(0.5);
+}
+
+/**
+ * Calculate the difference between to timevals
+ *
+ * @param t1 The end time
+ * @param t0 The start time
+ * @return Difference between t0 and t1 in seconds
+ */
+double timediff_seconds(struct timeval *t1, struct timeval *t0){
+	return 1.0*(t1->tv_sec-t0->tv_sec)+1e-6*(t1->tv_usec-t0->tv_usec);
 }

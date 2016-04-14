@@ -21,6 +21,7 @@ typedef struct _colloid {
 	struct _colloid *below; /**< which colloid is below me? */
 	int external_energy; /**< current external energy (substrate) */
 	int internal_energy; /**< current internal energy (bonds) */
+	int particles_index; /**< where is this colloid in the particles array? */
 } Colloid;
 
 bool colloid_bonded(Colloid *, Colloid *, bool*, int*, int*);
@@ -29,4 +30,4 @@ void insert_sorted_y(Colloid *, Colloid *);
 void init_bonding_partners(void);
 
 /** initializer for an empty colloid */
-#define EMPTY_COLLOID {{0.0,0.0},0.0,{NULL,NULL,NULL},{-1,-1,-1},NULL,NULL,0,0}
+#define EMPTY_COLLOID {{0.0,0.0},0.0,{NULL,NULL,NULL},{-1,-1,-1},NULL,NULL,0,0,0}

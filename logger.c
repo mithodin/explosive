@@ -25,6 +25,7 @@ int *thread_return_status; /**< Signals successfull termination of the log worke
 Colloid state_buffer[LOG_BUFFER_SIZE][NUMBER_OF_PARTICLES]; /**< Buffer to store particle information */
 int time_index[LOG_BUFFER_SIZE]; /**< Buffer to store mc time index */
 unsigned long real_time[LOG_BUFFER_SIZE]; /**< Buffer to store real time */
+int buf_largest_cluster[LOG_BUFFER_SIZE]; /**< Buffer to store largest cluster */
 int simulation_last_frame; /**< Store this so we know when to stop the worker thread */
 
 /**
@@ -51,7 +52,7 @@ void *log_logging(void *arg){
 	*ret_status=-1;
 	while(true){
 		sem_wait(&log_buffer_empty);
-		if( !h5log_log_frame(state_buffer[log_buffer_read_index], time_index[log_buffer_read_index], real_time[log_buffer_read_index])){
+		if( !h5log_log_frame(state_buffer[log_buffer_read_index], time_index[log_buffer_read_index], real_time[log_buffer_read_index], buf_largest_cluster[log_buffer_read_index])){
 			printf("> error writing to hdf5 log\n");
 			*ret_status=-1;
 			return (void *)ret_status;
@@ -70,14 +71,16 @@ void *log_logging(void *arg){
  * Add a simulation frame to the log buffer. May block when the buffer is full.
  * @param mc_time Current monte carlo step
  * @param simulation_done Is this the last frame?
+ * @param largest_cluster The size of the largest cluster in this frame
  * @param runtime Real time since start of the simulation in seconds
  */
-void log_enqueue(int mc_time, bool simulation_done, unsigned long runtime){
+void log_enqueue(int mc_time, bool simulation_done, unsigned long runtime, int largest_cluster){
 	sem_wait(&log_buffer_full);
 	//remember: the pointers in the copy will still point to the active colloids
 	memcpy(state_buffer[log_buffer_write_index],particles,sizeof(Colloid)*NUMBER_OF_PARTICLES);
 	time_index[log_buffer_write_index]=mc_time;
 	real_time[log_buffer_write_index]=runtime;
+	buf_largest_cluster[log_buffer_write_index]=largest_cluster;
 	if(simulation_done){
 		simulation_last_frame=mc_time;
 	}

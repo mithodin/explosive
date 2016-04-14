@@ -13,4 +13,5 @@ typedef struct _simulation_frame {
 	double external_energy;
 	double total_energy;
 	unsigned long realtime_seconds;
+	int largest_cluster;
 } SimulationFrame;

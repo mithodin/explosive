@@ -15,7 +15,7 @@ hid_t group;
 char directory_name[102];
 char simulation_frames_location[120];
 size_t simframe_size;
-size_t simframe_offsets[6];
+size_t simframe_offsets[7];
 
 /**
  * Initialize the hdf5 log file. Set up groups and tables as well as attributes
@@ -104,13 +104,15 @@ bool h5log_init(void){
 	simframe_offsets[3] = HOFFSET( SimulationFrame, external_energy );
 	simframe_offsets[4] = HOFFSET( SimulationFrame, total_energy );
 	simframe_offsets[5] = HOFFSET( SimulationFrame, realtime_seconds );
-	const char *simframe_field_names[6] = { "position",
+	simframe_offsets[6] = HOFFSET( SimulationFrame, largest_cluster );
+	const char *simframe_field_names[7] = { "position",
 	                                        "frame_index",
 	                                        "internal_energy",
 	                                        "external_energy",
 	                                        "total_energy",
-						"realtime_seconds"};
-	hid_t simframe_type[6];
+						"realtime_seconds",
+						"largest_cluster"};
+	hid_t simframe_type[7];
 	hsize_t flarray_dims[2] = {NUMBER_OF_PARTICLES, 3};
 	hid_t flarray_type = H5Tarray_create( H5T_NATIVE_FLOAT, 2, flarray_dims );
 	simframe_type[0]=flarray_type;
@@ -119,11 +121,12 @@ bool h5log_init(void){
 	simframe_type[3]=H5T_NATIVE_DOUBLE;
 	simframe_type[4]=H5T_NATIVE_DOUBLE;
 	simframe_type[5]=H5T_NATIVE_ULONG;
+	simframe_type[6]=H5T_NATIVE_INT;
 
 	status = H5TBmake_table("Simulation Frames", //table title
 	                        group, //parent node
 	                        simulation_frames_location, //path of the dataset
-	                        6, //number of fields
+	                        7, //number of fields
 	                        0, //number of initial records
 	                        simframe_size, //total size of one record
 	                        simframe_field_names, //names of the fields
@@ -166,12 +169,14 @@ bool h5log_log_acceptance_probability(double acceptance_probability){
  * @param particles An array of all particles, frozen. Only energy and position are guaranteed to be correct.
  * @param mc_time The current monte carlo step
  * @param execution_time Real time since start of the simulation in seconds
+ * @param largest_cluster The size of the largest cluster in this frame
  * @return Was the frame successfully logged?
  */
-bool h5log_log_frame(Colloid *particles, int mc_time, unsigned long execution_time){
+bool h5log_log_frame(Colloid *particles, int mc_time, unsigned long execution_time, int largest_cluster){
 	SimulationFrame sf[1];
 	sf[0].frame_index=mc_time;
 	sf[0].realtime_seconds=execution_time;
+	sf[0].largest_cluster=largest_cluster;
 	sf[0].internal_energy=0.0;
 	sf[0].external_energy=0.0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
@@ -182,12 +187,13 @@ bool h5log_log_frame(Colloid *particles, int mc_time, unsigned long execution_ti
 		sf[0].position[i][2]=particles[i].phi;
 	}
 	sf[0].total_energy=sf[0].internal_energy+sf[0].external_energy;
-	size_t simframe_sizes[6] = { sizeof(sf[0].position),
+	size_t simframe_sizes[7] = { sizeof(sf[0].position),
 	                             sizeof(sf[0].frame_index),
 	                             sizeof(sf[0].internal_energy),
 	                             sizeof(sf[0].external_energy),
 	                             sizeof(sf[0].total_energy),
-				     sizeof(sf[0].realtime_seconds)};
+				     sizeof(sf[0].realtime_seconds),
+				     sizeof(sf[0].largest_cluster)};
 
 	herr_t status = H5TBappend_records(group, simulation_frames_location, 1, simframe_size, simframe_offsets, simframe_sizes, &sf);
 	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); return false; }
