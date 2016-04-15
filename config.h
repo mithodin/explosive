@@ -10,7 +10,7 @@
 /** width of the simulation box */
 #define SIZE_X 100.0
 /** height of the simulation box */
-#define SIZE_Y 100.0
+#define SIZE_Y 86.60254037844386467635
 /** should the box have periodic boundary conditions in x? #undef if not. */
 #define PERIODIC_X
 /** should the box have periodic boundary conditions in y? #undef if not. */

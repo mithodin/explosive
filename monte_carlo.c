@@ -17,7 +17,7 @@
 double monte_carlo_step(void);
 bool mc_energy_change(Colloid *, int);
 double mc_acceptance_probability(int, int);
-void mc_init_particles(void);
+bool mc_init_particles(void);
 void mc_init_acceptance_probabilities(double);
 void mc_init_max_displacement(double);
 double timediff_seconds(struct timeval *, struct timeval *);
@@ -198,8 +198,14 @@ void mc_init_acceptance_probabilities(double kbt){
 
 /**
  * Place particles randomly in the box
+ *
+ * @return Were the particles successfully initialized?
  */
-void mc_init_particles(void){
+bool mc_init_particles(void){
+	if(NUMBER_OF_PARTICLES*M_PI*COLLOID_DIAMETER/4.0 > SIZE_X*SIZE_Y){
+		printf("> error: too many particles\n");
+		return false;
+	}
 	printf("> initializing particles... ");
 	fflush(NULL);
 	double d;
@@ -224,6 +230,7 @@ void mc_init_particles(void){
 	init_ysorted_list();
 	init_bonding_partners();
 	printf("done.\n");
+	return true;
 }
 
 /**
@@ -272,10 +279,13 @@ void mc_init_max_displacement(double target_acceptance_rate){
  *  - the maximum displacement and rotation
  *
  * @param kbt The temperature of the system
+ * @return Was the monte carlo subsystem successfully intialized?
  */
-void mc_init(double kbt){
+bool mc_init(double kbt){
 	init_substrate();
-	mc_init_particles();
+	if( !mc_init_particles() ){
+		return false;
+	}
 
 	//thermalize
 	mc_init_acceptance_probabilities(2.0);
@@ -283,6 +293,7 @@ void mc_init(double kbt){
 
 	mc_init_acceptance_probabilities(kbt);
 	mc_init_max_displacement(0.5);
+	return true;
 }
 
 /**

@@ -6,9 +6,9 @@ do
 	mkdir -p $sim_rundir
 	echo $sim_rundir
 	cd /home/lucas/Simulation/engine/build
-	cp $root$conffile ../
+	cp $root$conffile ../config.h
 	make -j
 	cp ../bin/explosive $sim_rundir
-	#cd $sim_rundir
-	#./explosive 1> log 2> error.log &
+	cd $sim_rundir
+	./explosive 1> log 2> error.log &
 done
