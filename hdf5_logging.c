@@ -92,8 +92,17 @@ bool h5log_init(void){
 	const unsigned int monte_carlo_steps_main=MONTE_CARLO_STEPS_MAIN;
 	status = H5LTset_attribute_uint(group, directory_name, "monte-carlo-steps-main", &monte_carlo_steps_main, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	const unsigned long dummy=0;
-	status = H5LTset_attribute_ulong(group, directory_name, "total-execution-time", &dummy, 1);
+	const unsigned int substrate_wells_x=SUBSTRATE_WELLS_X;
+	status = H5LTset_attribute_uint(group, directory_name, "substrate-wells-x", &substrate_wells_x, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	const unsigned int substrate_wells_y=SUBSTRATE_WELLS_Y;
+	status = H5LTset_attribute_uint(group, directory_name, "substrate-wells-y", &substrate_wells_y, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	const double offset_odd=SUBSTRATE_OFFSET_ODD;
+	status = H5LTset_attribute_double(group, directory_name, "substrate-offet-odd", &offset_odd, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	const double substrate_well_radius=SUBSTRATE_WELL_RADIUS;
+	status = H5LTset_attribute_double(group, directory_name, "substrate-well-radius", &substrate_well_radius, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 
 	//create simulation frame table
