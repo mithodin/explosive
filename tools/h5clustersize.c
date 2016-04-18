@@ -55,9 +55,9 @@ int main(int argc, char **argv){
 	}
 	size_t *field_sizes = calloc(number_of_fields,sizeof(size_t));
 	size_t *field_offsets = calloc(number_of_fields,sizeof(size_t));
-	size_t *type_size = malloc(sizeof(size_t));
+	size_t type_size;
 
-	status = H5TBget_field_info(group,"cluster_size",field_names,field_sizes,field_offsets,type_size);
+	status = H5TBget_field_info(group,"cluster_size",field_names,field_sizes,field_offsets,&type_size);
 	if( status < 0){
 		printf("Error reading field info.\n");
 		return -1;
@@ -70,17 +70,17 @@ int main(int argc, char **argv){
 		if(strcmp(field_names[i],"value")==0){ value=field_offsets[i]; }
 	}
 
-	printf("Size of a frame: %d\n",(int)*type_size);
+	printf("Size of a frame: %d\n",(int)type_size);
 
 	//Read frames
-	void *table_buffer = calloc(number_of_records,*type_size);
+	void *table_buffer = calloc(number_of_records,type_size);
 	FILE *file_histogram=fopen("cluster_size.dat","w");
 	if( file_histogram == NULL ){
 		printf("Error opening energy log file\n");
 		return -1;
 	}
 
-	status = H5TBread_table(group, "cluster_size", *type_size, field_offsets, field_sizes, table_buffer);
+	status = H5TBread_table(group, "cluster_size", type_size, field_offsets, field_sizes, table_buffer);
 	if( status < 0 ){
 		printf("Error reading table.\n");
 		return -1;
@@ -90,20 +90,20 @@ int main(int argc, char **argv){
 	double *histogram;
 	int largest_cluster=0;
 	for(int i=0;i<number_of_records;++i){
-		int *value_i = table_buffer+(*type_size)*i+value;
+		int *value_i = table_buffer+type_size*i+value;
 		if( *value_i > largest_cluster ){
 			largest_cluster=*value_i;
 		}
 	}
-	size_t histogram_num_bins=(size_t)ceil(1.0*largest_cluster/binwidth);
+	size_t histogram_num_bins=(size_t)ceil(1.0*largest_cluster/binwidth)+1;
 	histogram=calloc(histogram_num_bins,sizeof(double));
 	for(int i=0;i<histogram_num_bins;++i){
 		histogram[i]=0;
 	}
 	for(int i=0;i<number_of_records;++i){
-		double *relative_frequency_i = table_buffer+(*type_size)*i+relative_frequency;
-		int *value_i = table_buffer+(*type_size)*i+value;
-		histogram[*value_i/binwidth]+=*relative_frequency_i;
+		double *relative_frequency_i = table_buffer+type_size*i+relative_frequency;
+		int *value_i = table_buffer+type_size*i+value;
+		histogram[(int)floor(*value_i/binwidth)]+=*relative_frequency_i;
 	}
 	for(int i=0;i<histogram_num_bins;++i){
 		fprintf(file_histogram,"%5.1f\t%3.5f\n",(i+0.5)*binwidth,histogram[i]);
@@ -125,5 +125,14 @@ int main(int argc, char **argv){
 		printf("Error closing file\n");
 		return -1;
 	}
+
+	free(field_sizes);
+	free(field_offsets);
+	free(table_buffer);
+	for(int i=0;i<number_of_fields;++i){
+		free(field_names[i]);
+	}
+	free(field_names);
+	free(histogram);
 	return 0;
 }

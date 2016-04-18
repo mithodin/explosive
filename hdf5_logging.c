@@ -176,7 +176,7 @@ bool h5log_init(void){
 	                        cluster_bin_field_names, //names of the fields
 	                        cluster_bin_offsets, //offsets of the fields
 	                        cluster_bin_type, //array of types of the fields
-	                        20, //chunk size
+	                        10, //chunk size
 	                        NULL, //fill data?
 	                        5, //compression level (0-9)
 	                        NULL); //initial data
@@ -236,7 +236,7 @@ bool h5log_log_cluster_size(void){
 	cluster_bin_sizes[1] = sizeof(csb[0].relative_frequency);
 	cluster_bin_sizes[2] = sizeof(csb[0].value);
 
-	herr_t status = H5TBappend_records(group, cluster_size_distribution_location, number_of_bins, cluster_bin_size, cluster_bin_offsets, cluster_bin_sizes, &csb);
+	herr_t status = H5TBappend_records(group, cluster_size_distribution_location, number_of_bins, cluster_bin_size, cluster_bin_offsets, cluster_bin_sizes, csb);
 	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); return false; }
 	return true;
 }
