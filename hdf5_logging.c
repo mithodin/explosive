@@ -6,9 +6,11 @@
 #include <x86intrin.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include "dSFMT/dSFMT.h"
 #include "config.h"
 #include "colloid.h"
 #include "simulation_frame.h"
+#include "globals.h"
 
 hid_t logfile;
 hid_t group;
@@ -16,6 +18,10 @@ char directory_name[102];
 char simulation_frames_location[120];
 size_t simframe_size;
 size_t simframe_offsets[7];
+
+char cluster_size_distribution_location[120];
+size_t cluster_bin_size;
+size_t cluster_bin_offsets[3];
 
 /**
  * Initialize the hdf5 log file. Set up groups and tables as well as attributes
@@ -45,6 +51,7 @@ bool h5log_init(void){
 		snprintf(directory_name, sizeof(directory_name), "/%.94s_%05d", SIMULATION_SHORT_NAME, dir_exists_index++);
 	}
 	snprintf(simulation_frames_location, sizeof(simulation_frames_location), "%.101s/simulation_frames", directory_name);
+	snprintf(cluster_size_distribution_location, sizeof(cluster_size_distribution_location), "%.101s/cluster_size", directory_name);
 	group = H5Gcreate(logfile, directory_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	//create group attributes (stores simulation parameters)
@@ -146,6 +153,34 @@ bool h5log_init(void){
 	                        5, //compression level (0-9)
 	                        NULL); //initial data
 	if(status < 0){ printf("> H5Log experienced an error creating the framelog table\n"); return false; }
+
+	//create cluster size table
+	cluster_bin_size = sizeof( ClusterSizeBin );
+	cluster_bin_offsets[0] = HOFFSET( ClusterSizeBin, frequency );
+	cluster_bin_offsets[1] = HOFFSET( ClusterSizeBin, relative_frequency );
+	cluster_bin_offsets[2] = HOFFSET( ClusterSizeBin, value );
+	const char *cluster_bin_field_names[3] = { "frequency",
+	                                        "relative_frequency",
+						"value"};
+	hid_t cluster_bin_type[3];
+	cluster_bin_type[0]=H5T_NATIVE_INT;
+	cluster_bin_type[1]=H5T_NATIVE_DOUBLE;
+	cluster_bin_type[2]=H5T_NATIVE_INT;
+
+	status = H5TBmake_table("Cluster size distribution", //table title
+	                        group, //parent node
+	                        cluster_size_distribution_location, //path of the dataset
+	                        3, //number of fields
+	                        0, //number of initial records
+	                        cluster_bin_size, //total size of one record
+	                        cluster_bin_field_names, //names of the fields
+	                        cluster_bin_offsets, //offsets of the fields
+	                        cluster_bin_type, //array of types of the fields
+	                        20, //chunk size
+	                        NULL, //fill data?
+	                        5, //compression level (0-9)
+	                        NULL); //initial data
+	if(status < 0){ printf("> H5Log experienced an error creating the cluster size distribution table\n"); return false; }
 	return true;
 }
 
@@ -172,6 +207,40 @@ bool h5log_log_acceptance_probability(double acceptance_probability){
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	return true;
 }
+
+/**
+ * Log the cluster size distribution
+ * @return Was the size successfully logged?
+ */
+bool h5log_log_cluster_size(void){
+	int number_of_bins=0;
+	int total_clusters=0;
+	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+		if( cluster_sizes[i] > 0 ){
+			number_of_bins++;
+			total_clusters+=cluster_sizes[i];
+		}
+	}
+	ClusterSizeBin *csb=calloc(number_of_bins,sizeof(ClusterSizeBin));
+	int j=0;
+	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+		if( cluster_sizes[i] > 0 ){
+			csb[j].frequency=cluster_sizes[i];
+			csb[j].relative_frequency=1.0*cluster_sizes[i]/total_clusters;
+			csb[j].value=i;
+			++j;	
+		}
+	}
+	size_t cluster_bin_sizes[3];
+	cluster_bin_sizes[0] = sizeof(csb[0].frequency);
+	cluster_bin_sizes[1] = sizeof(csb[0].relative_frequency);
+	cluster_bin_sizes[2] = sizeof(csb[0].value);
+
+	herr_t status = H5TBappend_records(group, cluster_size_distribution_location, number_of_bins, cluster_bin_size, cluster_bin_offsets, cluster_bin_sizes, &csb);
+	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); return false; }
+	return true;
+}
+
 
 /**
  * Log one frame of the simulation

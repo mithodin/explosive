@@ -5,6 +5,8 @@ test
 tools/movie.xyz
 tools/energy.dat
 tools/largest_cluster.dat
+tools/cluster_size.dat
 tools/*png
 tools/h52ascii
+tools/h5clustersize
 doc/

@@ -24,6 +24,7 @@ int largest_cluster_size(void){
 		if(this_cluster > largest_cluster){
 			largest_cluster=this_cluster;
 		}
+		cluster_sizes[this_cluster]++;
 	}
 	return largest_cluster;
 }

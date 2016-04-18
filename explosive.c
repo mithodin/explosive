@@ -20,16 +20,21 @@ int get_random_seed(void);
 Colloid particles[NUMBER_OF_PARTICLES]; /**< stores all the particles */
 dsfmt_t rng; /**< stores the RNG state */
 struct timeval sim_start_time; /**< stores the start of the simulation */
+int cluster_sizes[NUMBER_OF_PARTICLES]; /**< stores the cluster size distribution */
 
 int main(void){
 	gettimeofday(&sim_start_time,NULL);
 	dsfmt_init_gen_rand(&rng,get_random_seed()); //initialize the rng
+	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+		cluster_sizes[i]=0;
+	}
 
 	double kbt=TEMPERATURE;
 	double paccept;
 	if( !mc_init(kbt) ){ printf("> mc_init() failed\n"); return -1; }
 	if( !log_init() ){ printf("> log_init() failed.\n"); return -1; }
 	paccept=mc_run(MONTE_CARLO_STEPS_MAIN,true);
+	if( !log_framelogger_shutdown() ){ printf("> Could not shut logging subsystem down.\n"); return -1; }
 
 	struct timeval sim_end_time;
 	gettimeofday(&sim_end_time,NULL);

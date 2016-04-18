@@ -15,3 +15,12 @@ typedef struct _simulation_frame {
 	unsigned long realtime_seconds;
 	int largest_cluster;
 } SimulationFrame;
+
+/**
+ * @brief Data structure to store a cluster size bin
+ */
+typedef struct _cluster_bin {
+	int frequency;
+	double relative_frequency;
+	int value;
+} ClusterSizeBin;

@@ -89,14 +89,22 @@ void log_enqueue(int mc_time, bool simulation_done, unsigned long runtime, int l
 }
 
 /**
- * Close the log file and shut down the logging system
- * @return Did the logging system shut down correctly?
+ * Join() the logger worker thread
+ * @return Did the logger join normally?
  */
-bool log_close(void){
+bool log_framelogger_shutdown(void){
 	if( pthread_join(log_thread_id,(void **)&thread_return_status) != 0 || *thread_return_status != 0){
 		printf("> Error joining logger thread\n");
 		return false;
 	}
+	return true;
+}	
+
+/**
+ * Close the log file and shut down the logging system
+ * @return Did the logging system shut down correctly?
+ */
+bool log_close(void){
 	return h5log_close();
 }
 
@@ -108,7 +116,7 @@ bool log_close(void){
  * @return Could the stats be successfully written?
  */
 bool log_simulation_stats(unsigned long execution_time, double acceptance_probability){
-	return h5log_log_final_time(execution_time) && h5log_log_acceptance_probability(acceptance_probability);
+	return h5log_log_final_time(execution_time) && h5log_log_acceptance_probability(acceptance_probability) && h5log_log_cluster_size();
 }
 
 /**
