@@ -4,7 +4,7 @@
  */
 
 /** give a short name for your simulation. No spaces! */
-#define SIMULATION_SHORT_NAME "test-hexagonal"
+#define SIMULATION_SHORT_NAME "test-continue-load-fewer-particles"
 /** give a short description of the simulation */
 #define SIMULATION_NAME "Development"
 /** width of the simulation box */
@@ -28,7 +28,7 @@
 /** temperature in kbT */
 #define TEMPERATURE 0.15
 /** how many particles? */
-#define NUMBER_OF_PARTICLES 3000
+#define NUMBER_OF_PARTICLES 2000
 /** how many monte carlo steps? */
 #define MONTE_CARLO_STEPS_MAIN 1000
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
@@ -50,4 +50,4 @@
 /** The file to load the old simulation from. If undefined, LOGFILE is used. You HAVE to do this if OLD_LOGFILE is the same as LOGFILE. */
 //#define OLD_LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 /** The directory of the old simulation */
-#define OLD_LOGFILE_GROUP "/cluster-test"
+#define OLD_LOGFILE_GROUP "/test-continue"

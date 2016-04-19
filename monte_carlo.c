@@ -229,6 +229,7 @@ bool mc_init_particles(void){
 		particles[i].external_energy=external_energy(particles[i].position);
 		particles[i].particles_index=i;
 	}
+	free(old_positions);
 #endif
 	double d;
 	bool collision=false;
@@ -366,6 +367,13 @@ bool mc_init(double kbt){
 	memcpy(old_positions,record_buffer+position,old_number_of_particles*3*sizeof(float));
 
 	free(record_buffer);
+	status = H5Gclose(conf_group);
+	if(status < 0){ printf("> Error closing the oldconf group\n"); return false; }
+
+  #ifdef OLD_LOGFILE
+	status = H5Fclose(configuration);
+	if(status < 0){ printf("> Error closing the oldconf file\n"); return false; }
+  #endif
 #endif
 	if( !mc_init_particles() ){
 		return false;

@@ -116,7 +116,7 @@ int main(int argc, char **argv){
 		fprintf(file_energy,"%d\t%1.5e\t%1.5e\t%1.5e\n",*frame_index_i,*internal_energy_i,*external_energy_i,*total_energy_i);
 		fprintf(file_movie,"%d\n#%d\n",number_of_particles,*frame_index_i);
 		for(int p=0;p<number_of_particles;++p){
-			fprintf(file_movie,"%3.5f\t%3.5f\t%2.5f\t0\n",positions[3*p],positions[3*p+1],positions[3*p+2]);
+			fprintf(file_movie,"C %13.10f %13.10f 0.0 0\n",positions[3*p],positions[3*p+1]);
 		}
 	}
 
