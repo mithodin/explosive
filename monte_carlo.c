@@ -34,6 +34,7 @@ bool mc_init_particles(void);
 void mc_init_acceptance_probabilities(double);
 bool mc_init_max_displacement(double);
 double timediff_seconds(struct timeval *, struct timeval *);
+unsigned long time_hm(unsigned long, unsigned long *, unsigned long *);
 
 double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
 double acceptance_probabilities_well[3]; /**< pre-calculated acceptance probabilities for entering and leaving a well on the substrate */
@@ -125,13 +126,13 @@ double mc_run(int steps, bool log){
 		}
 		if(log){
 			gettimeofday(&t1,NULL);
-			runtime=tim_hm((unsigned long)(t1.tv_sec-sim_start_time.tv_sec),&rtm,&rth);
+			runtime=time_hm((unsigned long)(t1.tv_sec-sim_start_time.tv_sec),&rtm,&rth);
 			largest_cluster=largest_cluster_size();
 			log_enqueue(i,i==steps,runtime,largest_cluster);
 			complete=1.0*i/steps;
 			mkpercent(percent_complete,103,complete);
-			seconds=time_hm((unsigned long)floor(100*complete),1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0),&minutes,&hours);
-			printf("\r> running %ldh %2ldm %2lds %s %3d%% complete. ETA: %ldh %2ldm %2lds       ",rth,rtm,runtime,percent_complete,hours,minutes,seconds);
+			seconds=time_hm((unsigned long)(1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0)),&minutes,&hours);
+			printf("\r> running %ldh %2ldm %2lds %s %3d%% complete. ETA: %ldh %2ldm %2lds       ",rth,rtm,runtime,percent_complete,(int)floor(100*complete),hours,minutes,seconds);
 			fflush(NULL);
 			t0=t1;
 		}
@@ -411,9 +412,9 @@ double timediff_seconds(struct timeval *t1, struct timeval *t0){
  * Calculate hours and minutes from seconds
  */
 unsigned long time_hm(unsigned long seconds, unsigned long *minutes, unsigned long *hours){
-	hours=seconds/3600;
-	seconds-=hours*3600;
-	minutes=seconds/60;
-	seconds-=minutes*60;
+	*hours=seconds/3600;
+	seconds-=*hours*3600;
+	*minutes=seconds/60;
+	seconds-=*minutes*60;
 	return seconds;
 }
