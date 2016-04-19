@@ -4,7 +4,7 @@
  */
 
 /** give a short name for your simulation. No spaces! */
-#define SIMULATION_SHORT_NAME "test-continue-load-fewer-particles"
+#define SIMULATION_SHORT_NAME "test-time"
 /** give a short description of the simulation */
 #define SIMULATION_NAME "Development"
 /** width of the simulation box */
@@ -28,11 +28,11 @@
 /** temperature in kbT */
 #define TEMPERATURE 0.15
 /** how many particles? */
-#define NUMBER_OF_PARTICLES 2000
+#define NUMBER_OF_PARTICLES 4000
 /** how many monte carlo steps? */
-#define MONTE_CARLO_STEPS_MAIN 1000
+#define MONTE_CARLO_STEPS_MAIN 10000
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
-#define LOGGING_INTERVAL 100
+#define LOGGING_INTERVAL 1000
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
 #define LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 //substrate
@@ -46,8 +46,8 @@
 #define SUBSTRATE_WELL_RADIUS 8.0
 
 /** define this if an old simulation should be loaded. If the number of particles in this simulation is different from the current one, random particles will be added or removed */
-#define CONTINUE
+//#define CONTINUE
 /** The file to load the old simulation from. If undefined, LOGFILE is used. You HAVE to do this if OLD_LOGFILE is the same as LOGFILE. */
 //#define OLD_LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 /** The directory of the old simulation */
-#define OLD_LOGFILE_GROUP "/test-continue"
+//#define OLD_LOGFILE_GROUP "/test-continue"

@@ -89,11 +89,14 @@ int main(int argc, char **argv){
 	//create histogram
 	double *histogram;
 	int largest_cluster=0;
+	long total_particles=0;
 	for(int i=0;i<number_of_records;++i){
 		int *value_i = table_buffer+type_size*i+value;
+		int *frequency_i = table_buffer+type_size*i+frequency;
 		if( *value_i > largest_cluster ){
 			largest_cluster=*value_i;
 		}
+		total_particles+=*value_i*(*frequency_i);
 	}
 	size_t histogram_num_bins=(size_t)ceil(1.0*largest_cluster/binwidth);
 	histogram=calloc(histogram_num_bins,sizeof(double));
@@ -101,9 +104,9 @@ int main(int argc, char **argv){
 		histogram[i]=0;
 	}
 	for(int i=0;i<number_of_records;++i){
-		double *relative_frequency_i = table_buffer+type_size*i+relative_frequency;
+		int *frequency_i = table_buffer+type_size*i+frequency;
 		int *value_i = table_buffer+type_size*i+value;
-		histogram[(int)floor((*value_i-1.0)/binwidth)]+=*relative_frequency_i;
+		histogram[(int)floor((*value_i-1.0)/binwidth)]+=1.0*(*frequency_i)*(*value_i)/total_particles;
 	}
 	for(int i=0;i<histogram_num_bins;++i){
 		fprintf(file_histogram,"%5.1f\t%3.5f\n",(i+0.5)*binwidth+1.0,histogram[i]);
