@@ -185,25 +185,24 @@ bool h5log_init(void){
 }
 
 /**
- * Log the execution time of the simulation
- * @param execution_time Real execution time in seconds
- * @return Could the time be successfully written to the log?
- */
-bool h5log_log_final_time(unsigned long execution_time){
-	printf("> Total execution time: %ld seconds\n",execution_time);
-	herr_t status = H5LTset_attribute_ulong(group, directory_name, "total-execution-time", &execution_time, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	return true;
-}
-
-/**
- * Log the overall acceptance probability
+ * Log the overall acceptance probability, execution time and a few others
  * @param acceptance_probability Average acceptance probability between 1.0 and 0.0.
+ * @param execution_time Real execution time in seconds
+ * @param max_displacement The maximum displacement used in the simulation. Important if simulation is to be continued.
+ * @param max_rotation The maximum rotation used in the simulation. Important if simulation is to be continued.
  * @return Could it be successfully written to the log?
  */
-bool h5log_log_acceptance_probability(double acceptance_probability){
+bool h5log_log_statistics(double acceptance_probability, unsigned long execution_time, double max_displacement, double max_rotation){
 	printf("> Overall acceptance probability: %3.0f%%\n",acceptance_probability*100);
 	herr_t status = H5LTset_attribute_double(group, directory_name, "acceptance-probability", &acceptance_probability, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	printf("> Total execution time: %ld seconds\n",execution_time);
+	status = H5LTset_attribute_ulong(group, directory_name, "total-execution-time", &execution_time, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+
+	status = H5LTset_attribute_double(group, directory_name, "max-displacement", &max_displacement, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	status = H5LTset_attribute_double(group, directory_name, "max-rotation", &max_rotation, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	return true;
 }

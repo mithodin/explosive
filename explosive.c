@@ -31,8 +31,8 @@ int main(void){
 
 	double kbt=TEMPERATURE;
 	double paccept;
-	if( !mc_init(kbt) ){ printf("> mc_init() failed\n"); return -1; }
 	if( !log_init() ){ printf("> log_init() failed.\n"); return -1; }
+	if( !mc_init(kbt) ){ printf("> mc_init() failed\n"); return -1; }
 	paccept=mc_run(MONTE_CARLO_STEPS_MAIN,true);
 	if( !log_framelogger_shutdown() ){ printf("> Could not shut logging subsystem down.\n"); return -1; }
 

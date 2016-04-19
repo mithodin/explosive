@@ -1,5 +1,4 @@
 /** @file */
-
 #include <math.h>
 #include <sys/time.h>
 #include <x86intrin.h>
@@ -14,12 +13,26 @@
 #include "substrate.h"
 #include "clusters.h"
 
+#ifdef CONTINUE
+#include <hdf5.h>
+#include <hdf5_hl.h>
+#include <string.h>
+
+hid_t configuration;
+hid_t conf_group;
+unsigned int old_number_of_particles;
+float *old_positions;
+  #ifndef OLD_LOGFILE
+extern hid_t logfile;
+  #endif
+#endif
+
 double monte_carlo_step(void);
 bool mc_energy_change(Colloid *, int);
 double mc_acceptance_probability(int, int);
 bool mc_init_particles(void);
 void mc_init_acceptance_probabilities(double);
-void mc_init_max_displacement(double);
+bool mc_init_max_displacement(double);
 double timediff_seconds(struct timeval *, struct timeval *);
 
 double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
@@ -208,9 +221,22 @@ bool mc_init_particles(void){
 	}
 	printf("> initializing particles... ");
 	fflush(NULL);
+#ifdef CONTINUE
+	for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
+		particles[i].position[0]=old_positions[3*i];
+		particles[i].position[1]=old_positions[3*i+1];
+		particles[i].phi=old_positions[3*i+1];
+		particles[i].external_energy=external_energy(particles[i].position);
+		particles[i].particles_index=i;
+	}
+#endif
 	double d;
 	bool collision=false;
+#ifdef CONTINUE
+	for(int i=old_number_of_particles;i<NUMBER_OF_PARTICLES;++i){
+#else
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+#endif
 		do{
 			particles[i].position[0]=SIZE_X*dsfmt_genrand_open_close(&rng);
 			particles[i].position[1]=SIZE_Y*dsfmt_genrand_open_close(&rng);
@@ -238,7 +264,7 @@ bool mc_init_particles(void){
  *
  * @param target_acceptance_rate The required acceptance rate
  */
-void mc_init_max_displacement(double target_acceptance_rate){
+bool mc_init_max_displacement(double target_acceptance_rate){
 	printf("> initializing maximum displacement... ");
 	fflush(NULL);
 	double md_tmp=max_displacement;
@@ -269,6 +295,7 @@ void mc_init_max_displacement(double target_acceptance_rate){
 		printf("[too many iterations] ");
 	}
 	printf("done.\n");
+	return true;
 }
 
 /**
@@ -283,17 +310,79 @@ void mc_init_max_displacement(double target_acceptance_rate){
  */
 bool mc_init(double kbt){
 	init_substrate();
+#ifdef CONTINUE
+	herr_t status;
+	hsize_t number_of_fields,number_of_records;
+  #ifdef OLD_LOGFILE
+	configuration = H5Fopen(OLD_LOGFILE, H5F_ACC_RDONLY, H5P_DEFAULT);
+  #else
+	configuration = logfile;
+  #endif
+  	if( configuration < 0 ){
+		printf("> Could not open old configuration file\n");
+		return false;
+	}
+
+	conf_group = H5Gopen(configuration, OLD_LOGFILE_GROUP, H5P_DEFAULT);
+	if( conf_group < 0 ){
+		printf("> Could not open group.\n");
+		return false;
+	}
+	
+	status = H5LTget_attribute_uint(conf_group,OLD_LOGFILE_GROUP,"number-of-particles",&old_number_of_particles);
+	if( status < 0 ){ printf("> Error reading number of particles from old file\n"); return false; }
+	status = H5LTget_attribute_double(conf_group,OLD_LOGFILE_GROUP,"max-displacement",&max_displacement);
+	if( status < 0 ){ printf("> Error reading max displacement from old file\n"); return false; }
+	status = H5LTget_attribute_double(conf_group,OLD_LOGFILE_GROUP,"max-rotation",&max_rotation);
+	if( status < 0 ){ printf("> Error reading max rotation from old file\n"); return false; }
+
+	status = H5TBget_table_info(conf_group,"simulation_frames",&number_of_fields,&number_of_records);
+	if( status < 0 ){ printf("> Error reading table info from old file\n"); return false; }
+
+	char **field_names = calloc(number_of_fields,sizeof(char *));
+	for(int i=0;i<number_of_fields;++i){
+		field_names[i]=calloc(50,sizeof(char));
+	}
+	size_t *field_sizes = calloc(number_of_fields,sizeof(size_t));
+	size_t *field_offsets = calloc(number_of_fields,sizeof(size_t));
+	size_t type_size=0;
+
+	status = H5TBget_field_info(conf_group,"simulation_frames",field_names,field_sizes,field_offsets,&type_size);
+	if( status < 0){
+		printf("> Error reading field info.\n");
+		return false;
+	}
+
+	size_t position=0;
+	for(int i=0;i<number_of_fields;++i){
+		if(strcmp(field_names[i],"position")==0){ position=field_offsets[i]; }
+	}
+
+	void *record_buffer=malloc(type_size);
+	status = H5TBread_records(conf_group, "simulation_frames", number_of_records-1, 1, type_size, field_offsets, field_sizes, record_buffer);
+	if( status < 0 ){ printf("> Error reading old configuration\n"); return false; }
+
+	old_positions = calloc(old_number_of_particles, 3*sizeof(float));
+	memcpy(old_positions,record_buffer+position,old_number_of_particles*3*sizeof(float));
+
+	free(record_buffer);
+#endif
 	if( !mc_init_particles() ){
 		return false;
 	}
 
+#ifndef CONTINUE
 	//thermalize
 	mc_init_acceptance_probabilities(2.0);
 	mc_run(100,false);
+#endif
 
 	mc_init_acceptance_probabilities(kbt);
-	mc_init_max_displacement(0.5);
+#ifdef CONTINUE
 	return true;
+#else
+	return mc_init_max_displacement(0.5);
+#endif
 }
 
 /**

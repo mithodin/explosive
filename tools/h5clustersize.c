@@ -95,7 +95,7 @@ int main(int argc, char **argv){
 			largest_cluster=*value_i;
 		}
 	}
-	size_t histogram_num_bins=(size_t)ceil(1.0*largest_cluster/binwidth)+1;
+	size_t histogram_num_bins=(size_t)ceil(1.0*largest_cluster/binwidth);
 	histogram=calloc(histogram_num_bins,sizeof(double));
 	for(int i=0;i<histogram_num_bins;++i){
 		histogram[i]=0;
@@ -103,10 +103,10 @@ int main(int argc, char **argv){
 	for(int i=0;i<number_of_records;++i){
 		double *relative_frequency_i = table_buffer+type_size*i+relative_frequency;
 		int *value_i = table_buffer+type_size*i+value;
-		histogram[(int)floor(*value_i/binwidth)]+=*relative_frequency_i;
+		histogram[(int)floor((*value_i-1.0)/binwidth)]+=*relative_frequency_i;
 	}
 	for(int i=0;i<histogram_num_bins;++i){
-		fprintf(file_histogram,"%5.1f\t%3.5f\n",(i+0.5)*binwidth,histogram[i]);
+		fprintf(file_histogram,"%5.1f\t%3.5f\n",(i+0.5)*binwidth+1.0,histogram[i]);
 	}
 
 	if( fclose(file_histogram) != 0 ){

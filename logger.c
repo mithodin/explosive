@@ -12,6 +12,7 @@
 #include "hdf5_logging.h"
 
 #define LOG_BUFFER_SIZE 5
+extern double max_rotation,max_displacement;
 
 void *log_logging(void *);
 
@@ -116,7 +117,7 @@ bool log_close(void){
  * @return Could the stats be successfully written?
  */
 bool log_simulation_stats(unsigned long execution_time, double acceptance_probability){
-	return h5log_log_final_time(execution_time) && h5log_log_acceptance_probability(acceptance_probability) && h5log_log_cluster_size();
+	return h5log_log_statistics(acceptance_probability,execution_time,max_displacement,max_rotation) && h5log_log_cluster_size();
 }
 
 /**
