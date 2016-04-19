@@ -111,7 +111,7 @@ double mc_run(int steps, bool log){
 	char percent_complete[103];
 	double complete=0.0;
 	double acceptance_probability=0.0;
-	unsigned long runtime;
+	unsigned long runtime,rth,rtm,hours,minutes,seconds;
 	int largest_cluster;
 	struct timeval t0,t1;
 	if(log){
@@ -125,12 +125,13 @@ double mc_run(int steps, bool log){
 		}
 		if(log){
 			gettimeofday(&t1,NULL);
-			runtime=(unsigned long)(t1.tv_sec-sim_start_time.tv_sec);
+			runtime=tim_hm((unsigned long)(t1.tv_sec-sim_start_time.tv_sec),&rtm,&rth);
 			largest_cluster=largest_cluster_size();
 			log_enqueue(i,i==steps,runtime,largest_cluster);
 			complete=1.0*i/steps;
 			mkpercent(percent_complete,103,complete);
-			printf("\r> running %lds %s %3d%% complete. ETA: %.0fs       ",runtime,percent_complete,(int)floor(100*complete),1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0));
+			seconds=time_hm((unsigned long)floor(100*complete),1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0),&minutes,&hours);
+			printf("\r> running %ldh %2ldm %2lds %s %3d%% complete. ETA: %ldh %2ldm %2lds       ",rth,rtm,runtime,percent_complete,hours,minutes,seconds);
 			fflush(NULL);
 			t0=t1;
 		}
@@ -393,6 +394,8 @@ bool mc_init(double kbt){
 #endif
 }
 
+//Helper functions
+
 /**
  * Calculate the difference between to timevals
  *
@@ -402,4 +405,15 @@ bool mc_init(double kbt){
  */
 double timediff_seconds(struct timeval *t1, struct timeval *t0){
 	return 1.0*(t1->tv_sec-t0->tv_sec)+1e-6*(t1->tv_usec-t0->tv_usec);
+}
+
+/**
+ * Calculate hours and minutes from seconds
+ */
+unsigned long time_hm(unsigned long seconds, unsigned long *minutes, unsigned long *hours){
+	hours=seconds/3600;
+	seconds-=hours*3600;
+	minutes=seconds/60;
+	seconds-=minutes*60;
+	return seconds;
 }
