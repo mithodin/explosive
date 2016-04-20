@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <x86intrin.h>
 #include <stdbool.h>
+#include <string.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
 #include "colloid.h"
@@ -16,7 +17,6 @@
 #ifdef CONTINUE
 #include <hdf5.h>
 #include <hdf5_hl.h>
-#include <string.h>
 
 hid_t configuration;
 hid_t conf_group;
@@ -35,6 +35,7 @@ void mc_init_acceptance_probabilities(double);
 bool mc_init_max_displacement(double);
 double timediff_seconds(struct timeval *, struct timeval *);
 unsigned long time_hm(unsigned long, unsigned long *, unsigned long *);
+void shuffle_float(size_t, size_t, float *);
 
 double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
 double acceptance_probabilities_well[3]; /**< pre-calculated acceptance probabilities for entering and leaving a well on the substrate */
@@ -224,6 +225,7 @@ bool mc_init_particles(void){
 	printf("> initializing particles... ");
 	fflush(NULL);
 #ifdef CONTINUE
+	shuffle_float((size_t)NUMBER_OF_PARTICLES,3,old_positions);
 	for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
 		particles[i].position[0]=old_positions[3*i];
 		particles[i].position[1]=old_positions[3*i+1];
@@ -417,4 +419,21 @@ unsigned long time_hm(unsigned long seconds, unsigned long *minutes, unsigned lo
 	*minutes=seconds/60;
 	seconds-=*minutes*60;
 	return seconds;
+}
+
+/**
+ * Shuffle a size*elem-length array of floats. Blocks of length elem will be kept intact
+ *
+ * @param size The number of elem-length blocks of floats in the array
+ * @param elem The length of the elementary blocks (will be swapped as one)
+ */
+void shuffle_float(size_t size, size_t elem, float *array){
+	float *tmp=calloc(elem,sizeof(float));
+	for(int i=(int)size-1;i>=0;--i){
+		int random_index = (int)floor(dsfmt_genrand_close_open(&rng)*i);
+		memcpy(tmp,array+random_index*elem,elem*sizeof(float));
+		memcpy(array+random_index*elem,array+i*elem,elem*sizeof(float));
+		memcpy(array+i*elem,tmp,elem*sizeof(float));
+	}
+	free(tmp);
 }

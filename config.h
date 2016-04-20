@@ -46,8 +46,8 @@
 #define SUBSTRATE_WELL_RADIUS 8.0
 
 /** define this if an old simulation should be loaded. If the number of particles in this simulation is different from the current one, random particles will be added or removed */
-//#define CONTINUE
+#define CONTINUE
 /** The file to load the old simulation from. If undefined, LOGFILE is used. You HAVE to do this if OLD_LOGFILE is the same as LOGFILE. */
 //#define OLD_LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 /** The directory of the old simulation */
-//#define OLD_LOGFILE_GROUP "/test-continue"
+#define OLD_LOGFILE_GROUP "/test-continue"

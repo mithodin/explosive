@@ -70,7 +70,7 @@ particle_number+=arguments.particles_step
 while particle_number <= arguments.particles_upper:
     index+=1
     file=open(filename.format(p=index),"w")
-    file.write(config_continue.format(sim_name=arguments.name+index_string.format(n=index), sim_description=arguments.descr, number_of_particles=particle_number, mc_steps=arguments.steps, logging_interval=arguments.log, old_sim_name=arguments.name+index_string.format(n=index-1)))
+    file.write(config_continue.format(sim_name=arguments.name+index_string.format(n=index), sim_description=arguments.descr, number_of_particles=particle_number, mc_steps=arguments.steps, logging_interval=arguments.log, old_sim_name="/"+arguments.name+index_string.format(n=index-1)))
     file.close()
     particle_number+=arguments.particles_step
 
@@ -78,6 +78,6 @@ particle_number-=2*arguments.particles_step
 while particle_number >= arguments.particles_lower:
     index+=1
     file=open(filename.format(p=index),"w")
-    file.write(config_continue.format(sim_name=arguments.name+index_string.format(n=index), sim_description=arguments.descr, number_of_particles=particle_number, mc_steps=arguments.steps, logging_interval=arguments.log, old_sim_name=arguments.name+index_string.format(n=index-1)))
+    file.write(config_continue.format(sim_name=arguments.name+index_string.format(n=index), sim_description=arguments.descr, number_of_particles=particle_number, mc_steps=arguments.steps, logging_interval=arguments.log, old_sim_name="/"+arguments.name+index_string.format(n=index-1)))
     file.close()
     particle_number-=arguments.particles_step
