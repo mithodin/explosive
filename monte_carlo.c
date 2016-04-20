@@ -431,9 +431,11 @@ void shuffle_float(size_t size, size_t elem, float *array){
 	float *tmp=calloc(elem,sizeof(float));
 	for(int i=(int)size-1;i>=0;--i){
 		int random_index = (int)floor(dsfmt_genrand_close_open(&rng)*i);
-		memcpy(tmp,array+random_index*elem,elem*sizeof(float));
-		memcpy(array+random_index*elem,array+i*elem,elem*sizeof(float));
-		memcpy(array+i*elem,tmp,elem*sizeof(float));
+		if(random_index != i){
+			memcpy(tmp,array+random_index*elem,elem*sizeof(float));
+			memcpy(array+random_index*elem,array+i*elem,elem*sizeof(float));
+			memcpy(array+i*elem,tmp,elem*sizeof(float));
+		}
 	}
 	free(tmp);
 }
