@@ -7,6 +7,7 @@ do
 	echo $sim_rundir
 	cd /home/lucas/Simulation/engine/build
 	cp $root$conffile ../config.h
+	make clean
 	make -j
 	cp ../bin/explosive $sim_rundir
 	cd $sim_rundir

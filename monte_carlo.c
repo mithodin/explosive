@@ -225,7 +225,7 @@ bool mc_init_particles(void){
 	printf("> initializing particles... ");
 	fflush(NULL);
 #ifdef CONTINUE
-	shuffle_float((size_t)NUMBER_OF_PARTICLES,3,old_positions);
+	shuffle_float((size_t)old_number_of_particles,3,old_positions);
 	for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
 		particles[i].position[0]=old_positions[3*i];
 		particles[i].position[1]=old_positions[3*i+1];
