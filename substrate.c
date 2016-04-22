@@ -3,10 +3,11 @@
 #include <x86intrin.h>
 #include <stdbool.h>
 #include "config.h"
-#include "colloid.h"
 #include "geometry.h"
+#include "colloid.h"
 
 vector2d well[SUBSTRATE_WELLS_X][SUBSTRATE_WELLS_Y]; /**< the centre of the wells */
+vector4d unit_vectors[2];
 
 /**
  * Calculate the external energy of a colloid
@@ -14,24 +15,45 @@ vector2d well[SUBSTRATE_WELLS_X][SUBSTRATE_WELLS_Y]; /**< the centre of the well
  * @param position The 2d position of the colloid
  * @return The energy in units of well depth (ENERGY_WELL_DEPTH)
  */
-int external_energy(vector2d position){
-	int row,column;
-	row=((int)(position[1]*SUBSTRATE_WELLS_Y/SIZE_Y))%SUBSTRATE_WELLS_Y;
-	column=((int)(position[0]*SUBSTRATE_WELLS_X/SIZE_X+(1.0-(row%2))/2.0))%SUBSTRATE_WELLS_X;
-	double d=0;
-	distance(position,well[column][row],&d);
-	if(d<SUBSTRATE_WELL_RADIUS){ return -1; }
-	return 0;
+double external_energy(vector2d position){
+	vector4d position2=_mm256_broadcast_pd(&position);
+	vector4d p1=_mm256_mul_pd(position2,unit_vectors[0]),p2=_mm256_mul_pd(position2,unit_vectors[1]);
+	vector4d sum=_mm256_hadd_pd(p1,p2);
+	vector4d pcos=_mm256_cos_pd(sum);
+	vector4d hsum=_mm256_hadd_pd(pcos,pcos);
+	return (hsum[0]+hsum[2])/(-4.0)*ENERGY_WELL_DEPTH;
 }
 
 /**
  * Initialize the substrate
  */
 void init_substrate(void){
-	for(int row=0;row<SUBSTRATE_WELLS_Y;++row){
-		for(int column=0;column<SUBSTRATE_WELLS_X;++column){
-			well[column][row][0]=((row%2)*SUBSTRATE_OFFSET_ODD)+column*(SIZE_X/SUBSTRATE_WELLS_X);
-			well[column][row][1]=(row+0.5)*(SIZE_Y/SUBSTRATE_WELLS_Y);
-		}
-	}
+	double scale=4.0*M_PI*SUBSTRATE_WELLS_X/SIZE_X/sqrt(3.0);
+	unit_vectors[0]=_mm256_set_pd(0.0,scale,sqrt(3.0)/2.0*scale,scale/2.0);
+	unit_vectors[1]=_mm256_set_pd(sqrt(3.0)/2.0*scale,-scale/2.0,0.0,0.0);
 }
+
+/*
+set xrange [0:100]
+set yrange [0:86.60254037844386467635]
+size_x=100.0
+num_x=5
+scale=2.0/sqrt(3.0)*2.0*pi*num_x/size_x
+g1x=0.0*scale
+g1y=1.0*scale
+g2x=sqrt(3.0)/2.0*scale
+g2y=0.5*scale
+g3x=g2x
+g3y=-g2y
+
+g(x,y)=(cos(g1x*x+g1y*y)+cos(g2x*x+g2y*y)+cos(g3x*x+g3y*y)+1)/(-4.0)
+set contour
+unset surface
+set isosamples 100
+set view equal xy
+set view 0,0
+set xlabel "x"
+set ylabel "y"
+
+splot g(x,y)
+*/

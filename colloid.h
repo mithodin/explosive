@@ -4,11 +4,6 @@
  **/
 
 /**
- * @brief two double-precision floats that can be worked with using SIMD instructions
- */
-typedef __m128d vector2d;
-
-/**
  * @brief Represents one colloid
  * including position and angle
  **/
@@ -19,7 +14,7 @@ typedef struct _colloid {
 	int bond_site[3]; /**< which patch on the partner am I bonded to? */
 	struct _colloid *above; /**< which colloid is above me? */
 	struct _colloid *below; /**< which colloid is below me? */
-	int external_energy; /**< current external energy (substrate) */
+	double external_energy; /**< current external energy (substrate) */
 	int internal_energy; /**< current internal energy (bonds) */
 	int particles_index; /**< where is this colloid in the particles array? */
 } Colloid;

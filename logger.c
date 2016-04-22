@@ -7,6 +7,7 @@
 #include <math.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
+#include "geometry.h"
 #include "colloid.h"
 #include "globals.h"
 #include "hdf5_logging.h"

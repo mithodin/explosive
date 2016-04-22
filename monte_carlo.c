@@ -6,11 +6,11 @@
 #include <string.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
+#include "geometry.h"
 #include "colloid.h"
 #include "logger.h"
 #include "globals.h"
 #include "monte_carlo.h"
-#include "geometry.h"
 #include "substrate.h"
 #include "clusters.h"
 
@@ -29,7 +29,7 @@ extern hid_t logfile;
 
 double monte_carlo_step(void);
 bool mc_energy_change(Colloid *, int);
-double mc_acceptance_probability(int, int);
+double mc_acceptance_probability(double, int);
 bool mc_init_particles(void);
 void mc_init_acceptance_probabilities(double);
 bool mc_init_max_displacement(double);
@@ -38,7 +38,7 @@ unsigned long time_hm(unsigned long, unsigned long *, unsigned long *);
 void shuffle_float(size_t, size_t, float *);
 
 double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
-double acceptance_probabilities_well[3]; /**< pre-calculated acceptance probabilities for entering and leaving a well on the substrate */
+double temperature; /**< System temperature in kbT */
 double max_displacement=0.1; /**< maximum displacement in either coordinate during one mc move */
 double max_rotation=M_PI; /**< maximum rotation during one mc move */ 
 
@@ -68,7 +68,7 @@ double monte_carlo_step(void){
 		#endif
 		new.phi=angle_twopi(particles[i].phi+max_rotation*(dsfmt_genrand_open_close(&rng)-0.5));
 
-		if(mc_energy_change(&new,i) && ( (new.external_energy-particles[i].external_energy)*ENERGY_WELL_DEPTH+(new.internal_energy-particles[i].internal_energy)*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability((new.external_energy-particles[i].external_energy), (new.internal_energy-particles[i].internal_energy)) ) ){
+		if(mc_energy_change(&new,i) && ( (new.external_energy-particles[i].external_energy)+(new.internal_energy-particles[i].internal_energy)*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability((new.external_energy-particles[i].external_energy), (new.internal_energy-particles[i].internal_energy)) ) ){
 			particles[i].position=new.position;
 			particles[i].phi=new.phi;
 			particles[i].external_energy=new.external_energy;
@@ -194,8 +194,8 @@ bool mc_energy_change(Colloid *new, int i){
  * @param du_int Have the bonds of the particle changed?
  * @return a number between 0.0 and 1.0
  */
-double mc_acceptance_probability(int du_ext, int du_int){
-	return acceptance_probabilities_well[1+du_ext]*acceptance_probabilities_bonds[3+du_int];
+double mc_acceptance_probability(double du_ext, int du_int){
+	return exp(-du_ext/temperature)*acceptance_probabilities_bonds[3+du_int];
 }
 
 /**
@@ -204,9 +204,7 @@ double mc_acceptance_probability(int du_ext, int du_int){
  * @param kbt The temperature of the system
  */
 void mc_init_acceptance_probabilities(double kbt){
-	for(int du_ext=-1;du_ext<=1;++du_ext){
-		acceptance_probabilities_well[1+du_ext]=exp(-du_ext*ENERGY_WELL_DEPTH/kbt);
-	}
+	temperature=kbt;
 	for(int du_int=-3;du_int<=3;++du_int){
 		acceptance_probabilities_bonds[3+du_int]=exp(-du_int*ENERGY_BOND/kbt);
 	}

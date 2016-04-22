@@ -9,6 +9,7 @@
 #include <x86intrin.h>
 #include <stdbool.h>
 #include "config.h"
+#include "geometry.h"
 #include "colloid.h"
 #include "logger.h"
 #include "monte_carlo.h"

@@ -3,8 +3,9 @@
 #include <stdbool.h>
 #include <x86intrin.h>
 #include "dSFMT/dSFMT.h"
-#include "colloid.h"
 #include "config.h"
+#include "geometry.h"
+#include "colloid.h"
 #include "globals.h"
 
 int iterate_bonding_partners(Colloid *, int, bool*);

@@ -3,11 +3,11 @@
 #include <math.h>
 #include <stdbool.h>
 #include <x86intrin.h>
-#include "config.h"
 #include "dSFMT/dSFMT.h"
+#include "config.h"
+#include "geometry.h"
 #include "colloid.h"
 #include "globals.h"
-#include "geometry.h"
 
 vector2d colloid_patch_site(Colloid *, int);
 int colloid_closest_site(double, double);

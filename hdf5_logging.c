@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
+#include "geometry.h"
 #include "colloid.h"
 #include "simulation_frame.h"
 #include "globals.h"
@@ -258,7 +259,7 @@ bool h5log_log_frame(Colloid *particles, int mc_time, unsigned long execution_ti
 	sf[0].external_energy=0.0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		sf[0].internal_energy+=ENERGY_BOND*particles[i].internal_energy/2.0;
-		sf[0].external_energy+=ENERGY_WELL_DEPTH*particles[i].external_energy;
+		sf[0].external_energy+=particles[i].external_energy;
 		sf[0].position[i][0]=particles[i].position[0];
 		sf[0].position[i][1]=particles[i].position[1];
 		sf[0].position[i][2]=particles[i].phi;

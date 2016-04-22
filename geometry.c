@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
-#include "colloid.h"
 #include "geometry.h"
+#include "colloid.h"
 
 /**
  * Calculate the distance between two points
