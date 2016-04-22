@@ -70,10 +70,11 @@ int colloid_closest_site(double alpha, double beta){
  * @return A 2d vector giving the position of the patch
  */
 vector2d colloid_patch_site(Colloid *c, int site){
-	vector2d position;
-	position[0]=c->position[0]+COLLOID_DIAMETER/2.0*cos(c->phi+TWO_THIRDS_PI*site);
+	vector2d position=_mm_set_pd(COLLOID_DIAMETER/2.0*cos(c->phi+TWO_THIRDS_PI*site),COLLOID_DIAMETER/2.0*sin(c->phi+TWO_THIRDS_PI*site));
+	return _mm_add_pd(position,c->position);
+/*	position[0]=c->position[0]+COLLOID_DIAMETER/2.0*cos(c->phi+TWO_THIRDS_PI*site);
 	position[1]=c->position[1]+COLLOID_DIAMETER/2.0*sin(c->phi+TWO_THIRDS_PI*site);
-	return position;
+	return position;*/
 }
 
 /**
