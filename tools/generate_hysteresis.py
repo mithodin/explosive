@@ -30,8 +30,8 @@ config="""#define SIMULATION_SHORT_NAME \"{sim_name}\"
 #define MONTE_CARLO_STEPS_MAIN {mc_steps:.0f}
 #define LOGGING_INTERVAL {logging_interval:.0f}
 #define LOGFILE \"../simulation_data.h5\"
-#define SUBSTRATE_WELLS_X 5
-#define SUBSTRATE_WELLS_Y 5
+#define SUBSTRATE_WELLS_X 0
+#define SUBSTRATE_WELLS_Y 0
 #define SUBSTRATE_OFFSET_ODD 10
 #define SUBSTRATE_WELL_RADIUS 8.0"""
 
@@ -51,8 +51,8 @@ config_continue="""#define SIMULATION_SHORT_NAME \"{sim_name}\"
 #define MONTE_CARLO_STEPS_MAIN {mc_steps:.0f}
 #define LOGGING_INTERVAL {logging_interval:.0f}
 #define LOGFILE \"../simulation_data.h5\"
-#define SUBSTRATE_WELLS_X 5
-#define SUBSTRATE_WELLS_Y 5
+#define SUBSTRATE_WELLS_X 0
+#define SUBSTRATE_WELLS_Y 0
 #define SUBSTRATE_OFFSET_ODD 10
 #define SUBSTRATE_WELL_RADIUS 8.0
 #define CONTINUE
@@ -66,7 +66,6 @@ particle_number=arguments.particles_lower
 file=open(filename.format(p=index),"w")
 file.write(config.format(sim_name=arguments.name+index_string.format(n=index), sim_description=arguments.descr, number_of_particles=particle_number, mc_steps=arguments.init_steps if arguments.init_steps > 0 else arguments.steps, logging_interval=arguments.log))
 file.close()
-particle_number+=arguments.particles_step
 while particle_number <= arguments.particles_upper:
     index+=1
     file=open(filename.format(p=index),"w")

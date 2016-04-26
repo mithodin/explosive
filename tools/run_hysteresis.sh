@@ -5,7 +5,7 @@ do
 	sim_rundir="/home/lucas/Simulation/run/hysteresis/$conffile/"
 	mkdir -p $sim_rundir
 	echo $sim_rundir
-	cd /home/lucas/Simulation/engine/build
+	cd /home/lucas/Simulation/bin_squarewell/build
 	cp $root$conffile ../config.h
 	make clean
 	make -j

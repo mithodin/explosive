@@ -4,13 +4,13 @@
  */
 
 /** give a short name for your simulation. No spaces! */
-#define SIMULATION_SHORT_NAME "test-time"
+#define SIMULATION_SHORT_NAME "test-continuous"
 /** give a short description of the simulation */
 #define SIMULATION_NAME "Development"
 /** width of the simulation box */
-#define SIZE_X 10.00
+#define SIZE_X 100.0
 /** height of the simulation box */
-#define SIZE_Y 8.660254037844386467635
+#define SIZE_Y 86.60254037844386467635
 /** should the box have periodic boundary conditions in x? Comment out if not. */
 #define PERIODIC_X
 /** should the box have periodic boundary conditions in y? Comment out if not. */
@@ -28,9 +28,9 @@
 /** temperature in kbT */
 #define TEMPERATURE 0.15
 /** how many particles? */
-#define NUMBER_OF_PARTICLES 60
+#define NUMBER_OF_PARTICLES 4500
 /** how many monte carlo steps? */
-#define MONTE_CARLO_STEPS_MAIN 100000
+#define MONTE_CARLO_STEPS_MAIN 1000000
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
 #define LOGGING_INTERVAL 1000
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
