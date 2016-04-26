@@ -32,7 +32,7 @@ bool colloid_bonded(Colloid *c1, Colloid *c2, bool *collision, int *site1, int *
 		*collision=true;
 		return false;
 	}else{
-		double beta1=atan2(relative_vector[1],relative_vector[0]);
+		double beta1=atan2(relative_vector.c.y,relative_vector.c.x);
 		double beta2=beta1+M_PI;
 		int c1i=colloid_closest_site(c1->phi,beta1);
 		int c2i=colloid_closest_site(c2->phi,beta2);
@@ -70,8 +70,8 @@ int colloid_closest_site(double alpha, double beta){
  * @return A 2d vector giving the position of the patch
  */
 vector2d colloid_patch_site(Colloid *c, int site){
-	vector2d position=_mm_set_pd(COLLOID_DIAMETER/2.0*cos(c->phi+TWO_THIRDS_PI*site),COLLOID_DIAMETER/2.0*sin(c->phi+TWO_THIRDS_PI*site));
-	return _mm_add_pd(position,c->position);
+	vector2d position={_mm_set_pd(COLLOID_DIAMETER/2.0*sin(c->phi+TWO_THIRDS_PI*site),COLLOID_DIAMETER/2.0*cos(c->phi+TWO_THIRDS_PI*site))}; //reverse order!
+	return (vector2d)_mm_add_pd(position.v,c->position.v);
 /*	position[0]=c->position[0]+COLLOID_DIAMETER/2.0*cos(c->phi+TWO_THIRDS_PI*site);
 	position[1]=c->position[1]+COLLOID_DIAMETER/2.0*sin(c->phi+TWO_THIRDS_PI*site);
 	return position;*/
@@ -116,13 +116,13 @@ void insert_sorted_y(Colloid *c, Colloid *list){
 	Colloid *tmp;
 	c->above=NULL;
 	c->below=NULL;
-	while(current->above != NULL && current->above->position[1] >= current->position[1] && current->position[1]<c->position[1]){
+	while(current->above != NULL && current->above->position.c.y >= current->position.c.y && current->position.c.y<c->position.c.y){
 		current=current->above;
 	}
-	while(current->below != NULL && current->below->position[1] <= current->position[1] && current->position[1]>c->position[1]){
+	while(current->below != NULL && current->below->position.c.y <= current->position.c.y && current->position.c.y>c->position.c.y){
 		current=current->below;
 	}
-	if(current->position[1]>c->position[1]){
+	if(current->position.c.y>c->position.c.y){
 		tmp=current->below;
 		current->below=c;
 		c->above=current;

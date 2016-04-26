@@ -51,20 +51,19 @@ double monte_carlo_step(void){
 	int accept=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
-		new.position[0]=particles[i].position[0]+max_displacement*(dsfmt_genrand_open_close(&rng)-0.5);
+		new.position=_mm_add_pd(particles[i].position,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
 		#ifndef PERIODIC_X
-		if(new.position[0] < 0 || new.position[0] > SIZE_X){
+		if(new.position.c.x < 0 || new.position.c.x > SIZE_X){
 			continue;
 		}
 		#endif
-		new.position[1]=particles[i].position[1]+max_displacement*(dsfmt_genrand_open_close(&rng)-0.5);
 		#ifndef PERIODIC_Y
-		if(new.position[1] < 0 || new.position[1] > SIZE_Y){
+		if(new.position.c.y < 0 || new.position.c.y > SIZE_Y){
 			continue;
 		}
 		#endif
 		#if defined(PERIODIC_X) || defined(PERIODIC_Y)
-		make_periodic(&(new.position));
+		new.position=make_periodic(new.position);
 		#endif
 		new.phi=angle_twopi(particles[i].phi+max_rotation*(dsfmt_genrand_open_close(&rng)-0.5));
 
@@ -155,7 +154,7 @@ bool mc_energy_change(Colloid *new, int i){
 	int site1;
 	int site2;
 	Colloid *current=particles[i].above;
-	while(distance_y(new->position[1],current->position[1]) <= COLLOID_MIN_BONDING_DISTANCE){
+	while(distance_y(new->position.c.y,current->position.c.y) <= COLLOID_MIN_BONDING_DISTANCE){
 		if(colloid_bonded(current,new,&collision,&site1,&site2) && !collision){
 			new->internal_energy--;
 			new->bonding_partner[site2]=current;
@@ -166,7 +165,7 @@ bool mc_energy_change(Colloid *new, int i){
 		current=current->above;
 	}
 	current=particles[i].below;
-	while(distance_y(current->position[1],new->position[1]) <= COLLOID_MIN_BONDING_DISTANCE){
+	while(distance_y(current->position.c.y,new->position.c.y) <= COLLOID_MIN_BONDING_DISTANCE){
 		if(colloid_bonded(current,new,&collision,&site1,&site2) && !collision){
 			new->internal_energy--;
 			new->bonding_partner[site2]=current;
@@ -176,14 +175,6 @@ bool mc_energy_change(Colloid *new, int i){
 		}
 		current=current->below;
 	}
-	//naive implementation
-	/*for(int j=0;j<NUMBER_OF_PARTICLES;++j){
-		if(j==i) continue;
-		distance(new_position,particles[j].position,&d);
-		if(d<COLLOID_DIAMETER){
-			return false;
-		}
-	}*/
 	return true;
 }
 

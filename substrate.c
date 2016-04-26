@@ -29,8 +29,10 @@ double external_energy(vector2d position){
  */
 void init_substrate(void){
 	double scale=4.0*M_PI*SUBSTRATE_WELLS_X/SIZE_X/sqrt(3.0);
-	unit_vectors[0]=_mm256_set_pd(0.0,scale,sqrt(3.0)/2.0*scale,scale/2.0);
-	unit_vectors[1]=_mm256_set_pd(sqrt(3.0)/2.0*scale,-scale/2.0,0.0,0.0);
+	double u0[4]={0.0,scale,sqrt(3.0)/2.0*scale,scale/2.0};
+	double u1[4]={sqrt(3.0)/2.0*scale,-scale/2.0,0.0,0.0};
+	unit_vectors[0]=_mm256_load_pd(u0);
+	unit_vectors[1]=_mm256_load_pd(u1);
 }
 
 /*
