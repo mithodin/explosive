@@ -16,7 +16,7 @@ vector4d unit_vectors[2];
  * @return The energy in units of well depth (ENERGY_WELL_DEPTH)
  */
 double external_energy(vector2d position){
-	vector4d position2=_mm256_broadcast_pd(&position);
+	vector4d position2=_mm256_broadcast_pd(&(position.v));
 	vector4d p1=_mm256_mul_pd(position2,unit_vectors[0]),p2=_mm256_mul_pd(position2,unit_vectors[1]);
 	vector4d sum=_mm256_hadd_pd(p1,p2);
 	vector4d pcos=_mm256_cos_pd(sum);

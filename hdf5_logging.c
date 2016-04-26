@@ -6,6 +6,7 @@
 #include <x86intrin.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
 #include "geometry.h"
@@ -260,8 +261,8 @@ bool h5log_log_frame(Colloid *particles, int mc_time, unsigned long execution_ti
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		sf[0].internal_energy+=ENERGY_BOND*particles[i].internal_energy/2.0;
 		sf[0].external_energy+=particles[i].external_energy;
-		sf[0].position[i][0]=particles[i].position[0];
-		sf[0].position[i][1]=particles[i].position[1];
+		sf[0].position[i][0]=particles[i].position.c.x;
+		sf[0].position[i][1]=particles[i].position.c.y;
 		sf[0].position[i][2]=particles[i].phi;
 	}
 	sf[0].total_energy=sf[0].internal_energy+sf[0].external_energy;

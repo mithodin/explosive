@@ -4,6 +4,7 @@
 #include <x86intrin.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
 #include "geometry.h"
@@ -51,7 +52,7 @@ double monte_carlo_step(void){
 	int accept=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
-		new.position=_mm_add_pd(particles[i].position,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
+		new.position.v=_mm_add_pd(particles[i].position.v,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
 		#ifndef PERIODIC_X
 		if(new.position.c.x < 0 || new.position.c.x > SIZE_X){
 			continue;
@@ -216,8 +217,8 @@ bool mc_init_particles(void){
 #ifdef CONTINUE
 	shuffle_float((size_t)old_number_of_particles,3,old_positions);
 	for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
-		particles[i].position[0]=old_positions[3*i];
-		particles[i].position[1]=old_positions[3*i+1];
+		particles[i].position.c.x=old_positions[3*i];
+		particles[i].position.c.y=old_positions[3*i+1];
 		particles[i].phi=old_positions[3*i+1];
 		particles[i].external_energy=external_energy(particles[i].position);
 		particles[i].particles_index=i;
@@ -232,8 +233,7 @@ bool mc_init_particles(void){
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 #endif
 		do{
-			particles[i].position[0]=SIZE_X*dsfmt_genrand_open_close(&rng);
-			particles[i].position[1]=SIZE_Y*dsfmt_genrand_open_close(&rng);
+			particles[i].position.v=_mm_set_pd(SIZE_Y*dsfmt_genrand_open_close(&rng),SIZE_X*dsfmt_genrand_open_close(&rng));
 			particles[i].phi=2.0*M_PI*dsfmt_genrand_open_close(&rng);
 			collision=false;
 			for(int j=0;j<i;++j){

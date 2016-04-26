@@ -5,6 +5,7 @@
 #include <x86intrin.h>
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 #include "dSFMT/dSFMT.h"
 #include "config.h"
 #include "geometry.h"
