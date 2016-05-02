@@ -10,7 +10,7 @@
 /** width of the simulation box */
 #define SIZE_X 100.0
 /** height of the simulation box */
-#define SIZE_Y 86.60254037844386467635
+#define SIZE_Y 103.92304845413263761162
 /** should the box have periodic boundary conditions in x? Comment out if not. */
 #define PERIODIC_X
 /** should the box have periodic boundary conditions in y? Comment out if not. */
@@ -36,14 +36,23 @@
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
 #define LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 //substrate
+#define SUBSTRATE_RANDOM
+//#define SUBSTRATE_TRIGONAL
+#define SUBSTRATE_WELL_RADIUS 8.0
+
+#ifdef SUBSTRATE_RANDOM
+#define SUBSTRATE_NUMBER_OF_PATCHES 30
+#endif
+
+#ifdef SUBSTRATE_TRIGONAL
 /** Number of wells in x direction */
 #define SUBSTRATE_WELLS_X 5
 /** Number of wells in y direction */
-#define SUBSTRATE_WELLS_Y 5
+#define SUBSTRATE_WELLS_Y 6
 /** Offset of odd rows in x direction */
 #define SUBSTRATE_OFFSET_ODD 10
 /** Radius of a well */
-#define SUBSTRATE_WELL_RADIUS 8.0
+#endif
 
 /** define this if an old simulation should be loaded. If the number of particles in this simulation is different from the current one, random particles will be added or removed */
 //#define CONTINUE
