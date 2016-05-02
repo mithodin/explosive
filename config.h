@@ -30,9 +30,9 @@
 /** how many particles? */
 #define NUMBER_OF_PARTICLES 4500
 /** how many monte carlo steps? */
-#define MONTE_CARLO_STEPS_MAIN 1000000
+#define MONTE_CARLO_STEPS_MAIN 100
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
-#define LOGGING_INTERVAL 1000
+#define LOGGING_INTERVAL 10
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
 #define LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 //substrate
@@ -41,7 +41,7 @@
 #define SUBSTRATE_WELL_RADIUS 8.0
 
 #ifdef SUBSTRATE_RANDOM
-#define SUBSTRATE_NUMBER_OF_PATCHES 30
+#define SUBSTRATE_NUMBER_OF_PATCHES 20
 #endif
 
 #ifdef SUBSTRATE_TRIGONAL
