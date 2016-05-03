@@ -148,7 +148,7 @@ void init_substrate(void){
 		r22.v = _mm_set_pd(r11.c.y+dx,r11.c.x+dx);
 		points_x[i]=_mm256_set_pd(r11.c.x,r21.c.x,r11.c.x,r21.c.x);
 		points_y[i]=_mm256_set_pd(r11.c.y,r11.c.y,r12.c.y,r12.c.y);
-		coefficients[i]=_mm256_set_pd(energy_substrate_direct(r22),-energy_substrate_direct(r12),-energy_substrate_direct(r21),energy_substrate_direct(r11));
+		coefficients[i]=_mm256_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy,-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
 	}
 	sample_energy();
 }
