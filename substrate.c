@@ -168,7 +168,7 @@ bool substrate_collision(vector2d *patches, vector2d new, int i){
 	double d=0;
 	for(i--;i>=0;--i){
 		distance(new,patches[i],&d);
-		if( d < 2.0*SUBSTRATE_WELL_RADIUS ){
+		if( d < 2.0*SUBSTRATE_WELL_RADIUS+2.0 ){
 			return true;
 		}
 	}
