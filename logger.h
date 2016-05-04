@@ -8,3 +8,4 @@ bool log_framelogger_shutdown(void);
 bool log_close(void);
 bool log_simulation_stats(unsigned long, double);
 void mkpercent(char *, int, double);
+bool log_substrate(vector2d *);

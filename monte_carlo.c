@@ -265,6 +265,8 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 	double tar_sqrt=sqrt(target_acceptance_rate);
 	double acceptance_rate=mc_run(100,false);
 	int i=0,j=0;
+	printf("dmax: %8.5f amax: %7.5f  ",max_displacement,max_rotation);
+	fflush(NULL);
 	while( j < 10 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
 		md_tmp=max_displacement;
 		max_displacement=0.0;
@@ -272,14 +274,20 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 		i=0;
 		while(max_rotation<2.0*M_PI && i < 100 && fabs(acceptance_rate-tar_sqrt)/tar_sqrt > 0.01){
 			max_rotation*=acceptance_rate/tar_sqrt;
+			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",md_tmp,max_rotation,acceptance_rate*acceptance_rate*100);
+			fflush(NULL);
 			acceptance_rate=mc_run(100,false);
 			++i;
 		}
 		max_displacement=md_tmp;
 		acceptance_rate=mc_run(100,false);
+		printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
+		fflush(NULL);
 		i=0;
 		while( i < 100 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
 			max_displacement*=acceptance_rate/target_acceptance_rate;
+			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
+			fflush(NULL);
 			acceptance_rate=mc_run(100,false);
 			++i;
 		}
@@ -303,7 +311,6 @@ bool mc_init_max_displacement(double target_acceptance_rate){
  * @return Was the monte carlo subsystem successfully intialized?
  */
 bool mc_init(double kbt){
-	init_substrate();
 #ifdef CONTINUE
 	herr_t status;
 	hsize_t number_of_fields,number_of_records;
@@ -322,7 +329,12 @@ bool mc_init(double kbt){
 		printf("> Could not open group.\n");
 		return false;
 	}
-	
+#endif
+	if( !init_substrate() ){
+		printf("> init_substrate failed\n");
+		return false;
+	};
+#ifdef CONTINUE
 	status = H5LTget_attribute_uint(conf_group,OLD_LOGFILE_GROUP,"number-of-particles",&old_number_of_particles);
 	if( status < 0 ){ printf("> Error reading number of particles from old file\n"); return false; }
 	status = H5LTget_attribute_double(conf_group,OLD_LOGFILE_GROUP,"max-displacement",&max_displacement);
@@ -379,11 +391,7 @@ bool mc_init(double kbt){
 #endif
 
 	mc_init_acceptance_probabilities(kbt);
-#ifdef CONTINUE
-	return true;
-#else
 	return mc_init_max_displacement(0.5);
-#endif
 }
 
 //Helper functions

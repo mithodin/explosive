@@ -25,6 +25,10 @@ char cluster_size_distribution_location[120];
 size_t cluster_bin_size;
 size_t cluster_bin_offsets[3];
 
+#ifdef SUBSTRATE_RANDOM
+char patch_storage_location[120];
+#endif
+
 /**
  * Initialize the hdf5 log file. Set up groups and tables as well as attributes
  * @return Did the initialization succeed?
@@ -54,6 +58,9 @@ bool h5log_init(void){
 	}
 	snprintf(simulation_frames_location, sizeof(simulation_frames_location), "%.101s/simulation_frames", directory_name);
 	snprintf(cluster_size_distribution_location, sizeof(cluster_size_distribution_location), "%.101s/cluster_size", directory_name);
+	#ifdef SUBSTRATE_RANDOM
+	snprintf(patch_storage_location, sizeof(patch_storage_location), "%.101s/random_patches", directory_name);
+	#endif
 	group = H5Gcreate(logfile, directory_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	//create group attributes (stores simulation parameters)
@@ -110,6 +117,11 @@ bool h5log_init(void){
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	const double offset_odd=SUBSTRATE_OFFSET_ODD;
 	status = H5LTset_attribute_double(group, directory_name, "substrate-offet-odd", &offset_odd, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	#endif
+	#ifdef SUBSTRATE_RANDOM
+	const unsigned int substrate_number_of_patches=SUBSTRATE_NUMBER_OF_PATCHES;
+	status = H5LTset_attribute_uint(group, directory_name, "substrate-number-of-patches", &substrate_number_of_patches, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	#endif
 	const double substrate_well_radius=SUBSTRATE_WELL_RADIUS;
@@ -293,4 +305,25 @@ bool h5log_close(void){
 	status = H5Fclose(logfile);
 	if(status < 0){ printf("> H5Log experienced an error closing the log file\n"); return false; }
 	return true;
+}
+
+/**
+ * Write the patch locations to the logfile
+ * 
+ * @param centres The locations of the patches
+ * @return Was it successfull?
+ */
+bool h5log_log_substrate(vector2d *centres){
+#ifdef SUBSTRATE_RANDOM
+	double buffer[SUBSTRATE_NUMBER_OF_PATCHES*2];
+	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
+		buffer[2*i]=centres[i].c.x;
+		buffer[2*i+1]=centres[i].c.y;
+	}
+	hsize_t dims[2]={SUBSTRATE_NUMBER_OF_PATCHES,2};
+	herr_t status = H5LTmake_dataset_double(group,patch_storage_location,2,dims,buffer);
+	return status >= 0;
+#else
+	return true;
+#endif
 }

@@ -7,3 +7,4 @@ bool h5log_log_frame(Colloid *, int, unsigned long, int);
 bool h5log_close(void);
 bool h5log_log_cluster_size(void);
 bool h5log_log_statistics(double, unsigned long, double, double);
+bool h5log_log_substrate(vector2d *);

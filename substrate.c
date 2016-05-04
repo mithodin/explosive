@@ -35,7 +35,7 @@ double external_energy(vector2d position){
 /**
  * Initialize the substrate
  */
-void init_substrate(void){
+bool init_substrate(void){
 	normalize=1.0;
 	double scale=4.0*M_PI*SUBSTRATE_WELLS_X/SIZE_X/sqrt(3.0);
 	double u0[4]={0.0,scale,sqrt(3.0)/2.0*scale,scale/2.0};
@@ -46,6 +46,7 @@ void init_substrate(void){
 	vector2d test={_mm_set_pd(0.0,SUBSTRATE_WELL_RADIUS)};
 	normalize=-ENERGY_WELL_DEPTH/external_energy(test);
 	sample_energy();
+	return true;
 }
 
 void sample_energy(void){
@@ -91,6 +92,13 @@ splot g(x,y)
 #include <stdlib.h>
 #include "dSFMT/dSFMT.h"
 #include "globals.h"
+#include "logger.h"
+
+#ifdef CONTINUE
+#include <hdf5.h>
+#include <hdf5_hl.h>
+extern hid_t conf_group;
+#endif
 
 bool substrate_collision(vector2d *, vector2d, int);
 double energy_single_well(double);
@@ -121,18 +129,34 @@ double external_energy(vector2d position){
 /**
  * Initialize the substrate
  */
-void init_substrate(void){
+bool init_substrate(void){
 	printf("> initializing substrate randomly with %d patches\n", SUBSTRATE_NUMBER_OF_PATCHES);
 	grid_res_x=(int)(ceil(SIZE_X/0.1));
 	grid_res_y=(int)(ceil(SIZE_Y/0.1));
 
 	cutoff_r=SIZE_X<SIZE_Y?SIZE_X/2.0:SIZE_Y/2.0;
 
+#ifdef CONTINUE
+	double buffer[SUBSTRATE_NUMBER_OF_PATCHES*2];
+	herr_t status = H5LTread_dataset_double(conf_group,"random_patches",buffer);
+	if( status < 0 ){
+		printf("> Error reading patch locations\n");
+		return false;
+	}
+	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
+		patches[i].v=_mm_load_pd(&(buffer[2*i]));
+	}
+#else
 	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
 		do{
 			patches[i].v=_mm_set_pd(SIZE_Y*dsfmt_genrand_open_close(&rng),SIZE_X*dsfmt_genrand_open_close(&rng));
 		}while(substrate_collision(patches, patches[i], i));
 	}
+#endif
+	if( !log_substrate(patches) ){
+		printf("> Error storing patch locations\n");
+		return false;
+	};
 	coefficients=calloc(grid_res_x*grid_res_y,sizeof(vector4d));
 	points_x=calloc(grid_res_x*grid_res_y,sizeof(vector4d));
 	points_y=calloc(grid_res_x*grid_res_y,sizeof(vector4d));
@@ -151,6 +175,7 @@ void init_substrate(void){
 		coefficients[i]=_mm256_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy,-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
 	}
 	sample_energy();
+	return true;
 }
 
 double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){

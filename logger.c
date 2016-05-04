@@ -144,3 +144,13 @@ void mkpercent(char *buf, int len, double perc){
 		}
 	}
 }
+
+/**
+ * Store the patch location for a random distribution
+ *
+ * @param centres The locations of the patches
+ * @return Could it be successfully logged?
+ */
+bool log_substrate(vector2d *centres){
+	return h5log_log_substrate(centres);
+}
