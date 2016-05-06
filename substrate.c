@@ -79,11 +79,19 @@ bool init_substrate(void){
 	int patches_x = (int)sqrt(SUBSTRATE_NUMBER_OF_PATCHES), patches_y = SUBSTRATE_NUMBER_OF_PATCHES/patches_x;
 	double sx = SIZE_X/patches_x, sy = SIZE_Y/patches_y;
 	#endif
+	#if SUBSTRATE_PATTERN == 0
+	int j=0;
+	#endif
 	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
 	#if SUBSTRATE_PATTERN == 0
 		do{
 			patches[i].v = _mm_set_pd(SIZE_Y*dsfmt_genrand_open_close(&rng),SIZE_X*dsfmt_genrand_open_close(&rng));
+			if(++j > 1000000){
+				i=0;
+				break;
+			}
 		}while(substrate_collision(patches, patches[i], i));
+		j=0;
 	#elif SUBSTRATE_PATTERN == 1
 		patches[i].v = _mm_set_pd((i/patches_x+0.5)*sy,(i%patches_x+0.5*((i/patches_x)%2))*sx);
 	#elif SUBSTRATE_PATTERN == 2
