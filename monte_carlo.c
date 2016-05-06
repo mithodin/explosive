@@ -272,8 +272,12 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 		max_displacement=0.0;
 		acceptance_rate=mc_run(100,false);
 		i=0;
-		while(max_rotation<2.0*M_PI && i < 100 && fabs(acceptance_rate-tar_sqrt)/tar_sqrt > 0.01){
+		while(i < 100 && fabs(acceptance_rate-tar_sqrt)/tar_sqrt > 0.01){
 			max_rotation*=acceptance_rate/tar_sqrt;
+			if( max_rotation > 2.0*M_PI ){
+				max_rotation = 2.0*M_PI;
+				break;
+			}
 			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",md_tmp,max_rotation,acceptance_rate*acceptance_rate*100);
 			fflush(NULL);
 			acceptance_rate=mc_run(100,false);
@@ -286,6 +290,10 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 		i=0;
 		while( i < 100 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
 			max_displacement*=acceptance_rate/target_acceptance_rate;
+			if( max_displacement > SIZE_X ){
+				max_displacement = SIZE_X;
+				break;
+			}
 			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
 			fflush(NULL);
 			acceptance_rate=mc_run(100,false);

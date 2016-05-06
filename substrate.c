@@ -3,94 +3,11 @@
 #include <x86intrin.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "config.h"
+#include "dSFMT/dSFMT.h"
 #include "geometry.h"
 #include "colloid.h"
-
-#ifdef SUBSTRATE_TRIGONAL
-
-vector2d well[SUBSTRATE_WELLS_X][SUBSTRATE_WELLS_Y]; /**< the centre of the wells */
-vector4d unit_vectors[2];
-double normalize;
-
-void sample_energy(void);
-
-/**
- * Calculate the external energy of a colloid
- * 
- * @param position The 2d position of the colloid
- * @return The energy in units of well depth (ENERGY_WELL_DEPTH)
- */
-double external_energy(vector2d position){
-	vector4d position2=_mm256_broadcast_pd(&(position.v));
-	vector4d p1=_mm256_mul_pd(position2,unit_vectors[0]),p2=_mm256_mul_pd(position2,unit_vectors[1]);
-	vector4d sum=_mm256_hadd_pd(p1,p2);
-	vector4d pcos=_mm256_cos_pd(sum);
-	vector4d hsum=_mm256_hadd_pd(pcos,pcos);
-	double energy=(hsum[0]+hsum[2])/(-4.0);
-	if( energy < 0.0 ){ energy*= normalize; }
-	return energy<-ENERGY_WELL_DEPTH?-ENERGY_WELL_DEPTH:energy;
-}
-
-/**
- * Initialize the substrate
- */
-bool init_substrate(void){
-	normalize=1.0;
-	double scale=4.0*M_PI*SUBSTRATE_WELLS_X/SIZE_X/sqrt(3.0);
-	double u0[4]={0.0,scale,sqrt(3.0)/2.0*scale,scale/2.0};
-	double u1[4]={sqrt(3.0)/2.0*scale,-scale/2.0,0.0,0.0};
-	unit_vectors[0]=_mm256_load_pd(u0);
-	unit_vectors[1]=_mm256_load_pd(u1);
-
-	vector2d test={_mm_set_pd(0.0,SUBSTRATE_WELL_RADIUS)};
-	normalize=-ENERGY_WELL_DEPTH/external_energy(test);
-	sample_energy();
-	return true;
-}
-
-void sample_energy(void){
-	FILE *energy_file = fopen("potential.dat","w");
-	vector2d test;
-	for(int i=0;i<100;++i){
-		test.c.x = i*SIZE_X/100.0/SUBSTRATE_WELLS_X;
-		for(int j=0;j<200;++j){
-			test.c.y = j*SIZE_Y/100.0/SUBSTRATE_WELLS_Y;
-			fprintf(energy_file,"%1.5f\t%1.5f\t%1.10f\n",test.c.x,test.c.y,external_energy(test));
-		}
-	}
-}
-
-/*
-set xrange [0:100]
-set yrange [0:86.60254037844386467635]
-size_x=100.0
-num_x=5
-scale=2.0/sqrt(3.0)*2.0*pi*num_x/size_x
-g1x=0.0*scale
-g1y=1.0*scale
-g2x=sqrt(3.0)/2.0*scale
-g2y=0.5*scale
-g3x=g2x
-g3y=-g2y
-
-g(x,y)=(cos(g1x*x+g1y*y)+cos(g2x*x+g2y*y)+cos(g3x*x+g3y*y)+1)/(-4.0)
-set contour
-unset surface
-set isosamples 100
-set view equal xy
-set view 0,0
-set xlabel "x"
-set ylabel "y"
-
-splot g(x,y)
-*/
-
-#endif
-
-#ifdef SUBSTRATE_RANDOM
-#include <stdlib.h>
-#include "dSFMT/dSFMT.h"
 #include "globals.h"
 #include "logger.h"
 
@@ -119,18 +36,29 @@ vector2d patches[SUBSTRATE_NUMBER_OF_PATCHES];
  * @return The energy in units of well depth (ENERGY_WELL_DEPTH)
  */
 double external_energy(vector2d position){
+#if SUBSTRATE_NUMBER_OF_PATCHES > 0
 	int row, column, i;
 	column = (int)(position.c.x/dx);
 	row = (int)(position.c.y/dy);
 	i = row*grid_res_x+column;
 	return grid_interpolate(position, points_x[i], points_y[i], coefficients[i]);
+#else
+	return 0.0;
+#endif
 }
 
 /**
  * Initialize the substrate
  */
 bool init_substrate(void){
+#if SUBSTRATE_NUMBER_OF_PATCHES > 0
+	#if SUBSTRATE_PATTERN == 0
 	printf("> initializing substrate randomly with %d patches\n", SUBSTRATE_NUMBER_OF_PATCHES);
+	#elif SUBSTRATE_PATTERN == 1
+	printf("> initializing substrate trigonal pattern with %d patches\n", SUBSTRATE_NUMBER_OF_PATCHES);
+	#elif SUBSTRATE_PATTERN == 2
+	printf("> initializing substrate square pattern with %d patches\n", SUBSTRATE_NUMBER_OF_PATCHES);
+	#endif
 	grid_res_x=(int)(ceil(SIZE_X/0.1));
 	grid_res_y=(int)(ceil(SIZE_Y/0.1));
 
@@ -147,11 +75,22 @@ bool init_substrate(void){
 		patches[i].v=_mm_load_pd(&(buffer[2*i]));
 	}
 #else
+	#if SUBSTRATE_PATTERN > 0
+	int patches_x = (int)sqrt(SUBSTRATE_NUMBER_OF_PATCHES), patches_y = SUBSTRATE_NUMBER_OF_PATCHES/patches_x;
+	double sx = SIZE_X/patches_x, sy = SIZE_Y/patches_y;
+	#endif
 	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
+	#if SUBSTRATE_PATTERN == 0
 		do{
-			patches[i].v=_mm_set_pd(SIZE_Y*dsfmt_genrand_open_close(&rng),SIZE_X*dsfmt_genrand_open_close(&rng));
+			patches[i].v = _mm_set_pd(SIZE_Y*dsfmt_genrand_open_close(&rng),SIZE_X*dsfmt_genrand_open_close(&rng));
 		}while(substrate_collision(patches, patches[i], i));
+	#elif SUBSTRATE_PATTERN == 1
+		patches[i].v = _mm_set_pd((i/patches_x+0.5)*sy,(i%patches_x+0.5*((i/patches_x)%2))*sx);
+	#elif SUBSTRATE_PATTERN == 2
+		patches[i].v = _mm_set_pd((i/patches_x+0.5)*sy,(i%patches_x+0.5)*sx);
+	#endif
 	}
+
 #endif
 	if( !log_substrate(patches) ){
 		printf("> Error storing patch locations\n");
@@ -175,6 +114,7 @@ bool init_substrate(void){
 		coefficients[i]=_mm256_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy,-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
 	}
 	sample_energy();
+#endif
 	return true;
 }
 
@@ -210,8 +150,12 @@ double energy_substrate_direct(vector2d r){
 }
 
 double energy_single_well(double distance){
+	#if SUBSTRATE_CONTINUOUS == 1
 	double frc=energy_raw(cutoff_r);
 	return distance<SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:(distance>cutoff_r?0.0:(frc-energy_raw(distance))/(frc/ENERGY_WELL_DEPTH-1.0));
+	#elif SUBSTRATE_CONTINUOUS == 0
+	return distance < SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:0.0;
+	#endif
 }
 
 double energy_raw(double distance){
@@ -231,4 +175,3 @@ void sample_energy(void){
 	}
 	fclose(energy_file);
 }
-#endif

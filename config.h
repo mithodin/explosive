@@ -4,7 +4,7 @@
  */
 
 /** give a short name for your simulation. No spaces! */
-#define SIMULATION_SHORT_NAME "test-rnd-load"
+#define SIMULATION_SHORT_NAME "test-pattern-flat"
 /** give a short description of the simulation */
 #define SIMULATION_NAME "Development"
 /** width of the simulation box */
@@ -28,35 +28,25 @@
 /** temperature in kbT */
 #define TEMPERATURE 0.15
 /** how many particles? */
-#define NUMBER_OF_PARTICLES 5000
+#define NUMBER_OF_PARTICLES 100
 /** how many monte carlo steps? */
-#define MONTE_CARLO_STEPS_MAIN 100
+#define MONTE_CARLO_STEPS_MAIN 1000
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
-#define LOGGING_INTERVAL 10
+#define LOGGING_INTERVAL 100
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
 #define LOGFILE "/home/lucas/Simulation/simulation_data.h5"
-//substrate
-#define SUBSTRATE_RANDOM
-//#define SUBSTRATE_TRIGONAL
+/** Set substrate pattern. 0 = Random, 1 = Trigonal, 2 = Square */
+#define SUBSTRATE_PATTERN 0
+/** Define the radius of a well */
 #define SUBSTRATE_WELL_RADIUS 8.0
-
-#ifdef SUBSTRATE_RANDOM
-#define SUBSTRATE_NUMBER_OF_PATCHES 20
-#endif
-
-#ifdef SUBSTRATE_TRIGONAL
-/** Number of wells in x direction */
-#define SUBSTRATE_WELLS_X 5
-/** Number of wells in y direction */
-#define SUBSTRATE_WELLS_Y 6
-/** Offset of odd rows in x direction */
-#define SUBSTRATE_OFFSET_ODD 10
-/** Radius of a well */
-#endif
+/** Whether or not the potential should be continuous. 1 = Continuous, 0 = Square well */
+#define SUBSTRATE_CONTINUOUS 0
+/** Set the number of patches */
+#define SUBSTRATE_NUMBER_OF_PATCHES 0
 
 /** define this if an old simulation should be loaded. If the number of particles in this simulation is different from the current one, random particles will be added or removed */
-#define CONTINUE
+//#define CONTINUE
 /** The file to load the old simulation from. If undefined, LOGFILE is used. You HAVE to do this if OLD_LOGFILE is the same as LOGFILE. */
 //#define OLD_LOGFILE "/home/lucas/Simulation/simulation_data.h5"
 /** The directory of the old simulation */
-#define OLD_LOGFILE_GROUP "/test-rnd-store"
+//#define OLD_LOGFILE_GROUP "/test-rnd-store"
