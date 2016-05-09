@@ -314,7 +314,6 @@ bool h5log_close(void){
  * @return Was it successfull?
  */
 bool h5log_log_substrate(vector2d *centres){
-#ifdef SUBSTRATE_RANDOM
 	double buffer[SUBSTRATE_NUMBER_OF_PATCHES*2];
 	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
 		buffer[2*i]=centres[i].c.x;
@@ -323,7 +322,4 @@ bool h5log_log_substrate(vector2d *centres){
 	hsize_t dims[2]={SUBSTRATE_NUMBER_OF_PATCHES,2};
 	herr_t status = H5LTmake_dataset_double(group,patch_storage_location,2,dims,buffer);
 	return status >= 0;
-#else
-	return true;
-#endif
 }

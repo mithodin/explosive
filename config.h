@@ -1,5 +1,5 @@
-#define SIMULATION_SHORT_NAME "hy_random_c-00"
-#define SIMULATION_NAME "random lattice, continuous potential"
+#define SIMULATION_SHORT_NAME "dev-26"
+#define SIMULATION_NAME "Development Test"
 #define SIZE_X 100.0
 #define SIZE_Y 103.92304845413264047238
 #define PERIODIC_X
@@ -10,11 +10,13 @@
 #define ENERGY_WELL_DEPTH 5.0
 #define ENERGY_BOND 1.0
 #define TEMPERATURE 0.15
-#define NUMBER_OF_PARTICLES 4500
-#define MONTE_CARLO_STEPS_MAIN 4000000
+#define NUMBER_OF_PARTICLES 4000
+#define MONTE_CARLO_STEPS_MAIN 1000000
 #define LOGGING_INTERVAL 1000
-#define LOGFILE "simulation_data.h5"
-#define SUBSTRATE_PATTERN 0
+#define LOGFILE "../simulation_data.h5"
+#define SUBSTRATE_PATTERN 1
 #define SUBSTRATE_CONTINUOUS 1
-#define SUBSTRATE_NUMBER_OF_PATCHES 23
+#define SUBSTRATE_NUMBER_OF_PATCHES 0
 #define SUBSTRATE_WELL_RADIUS 8.0
+#define CONTINUE
+#define OLD_LOGFILE_GROUP "/dev-25"
