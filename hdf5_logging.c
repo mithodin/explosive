@@ -25,9 +25,7 @@ char cluster_size_distribution_location[120];
 size_t cluster_bin_size;
 size_t cluster_bin_offsets[3];
 
-#ifdef SUBSTRATE_RANDOM
 char patch_storage_location[120];
-#endif
 
 /**
  * Initialize the hdf5 log file. Set up groups and tables as well as attributes
@@ -58,9 +56,7 @@ bool h5log_init(void){
 	}
 	snprintf(simulation_frames_location, sizeof(simulation_frames_location), "%.101s/simulation_frames", directory_name);
 	snprintf(cluster_size_distribution_location, sizeof(cluster_size_distribution_location), "%.101s/cluster_size", directory_name);
-	#ifdef SUBSTRATE_RANDOM
 	snprintf(patch_storage_location, sizeof(patch_storage_location), "%.101s/random_patches", directory_name);
-	#endif
 	group = H5Gcreate(logfile, directory_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	//create group attributes (stores simulation parameters)
