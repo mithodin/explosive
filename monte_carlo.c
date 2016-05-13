@@ -133,7 +133,7 @@ double mc_run(int steps, bool log){
 			complete=1.0*i/steps;
 			mkpercent(percent_complete,103,complete);
 			seconds=time_hm((unsigned long)(1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0)),&minutes,&hours);
-			printf("\r> running %ldh %2ldm %2lds %s %3d%% complete. ETA: %ldh %2ldm %2lds       ",rth,rtm,runtime,percent_complete,(int)floor(100*complete),hours,minutes,seconds);
+			printf("\r> running %ldh %2ldm %2lds %s %3d%% complete. ETA: %2ldh %2ldm %2lds       ",rth,rtm,runtime,percent_complete,(int)floor(100*complete),hours,minutes,seconds);
 			fflush(NULL);
 			t0=t1;
 		}
