@@ -122,7 +122,7 @@ bool init_substrate(void){
 		coefficients[i]=_mm256_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy,-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
 	}
 	sample_energy();
-#endif
+#endif //END IF NO PATCHES
 	return true;
 }
 

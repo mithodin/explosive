@@ -10,3 +10,5 @@ tools/*png
 tools/h52ascii
 tools/h5clustersize
 doc/
+.gitignore
+config.h
