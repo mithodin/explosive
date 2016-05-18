@@ -19,7 +19,7 @@ int largest_cluster_size(void){
 	bool particle_done[NUMBER_OF_PARTICLES]={false};
 	int largest_cluster=0;
 	int this_cluster=0;
-	for(int i=0;i<NUMBER_OF_PARTICLES-largest_cluster;++i){
+	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		if( particle_done[i] ) continue;
 		this_cluster=iterate_bonding_partners(&(particles[i]),-1,particle_done);
 		if(this_cluster > largest_cluster){
