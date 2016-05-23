@@ -238,7 +238,7 @@ bool h5log_log_cluster_size(void){
 		if( cluster_sizes[i] > 0 ){
 			csb[j].frequency=cluster_sizes[i];
 			csb[j].relative_frequency=1.0*cluster_sizes[i]/total_clusters;
-			csb[j].value=i;
+			csb[j].value=i+1;
 			++j;	
 		}
 	}
