@@ -163,8 +163,8 @@ bool init_substrate(void){
 
 #ifdef __AVX__
 double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
-	vector4d xx=_mm256_broadcast_sd(&(r.c.x));
-	vector4d yy=_mm256_broadcast_sd(&(r.c.y));
+	vector4d xx={_mm256_broadcast_sd(&(r.c.x))};
+	vector4d yy={_mm256_broadcast_sd(&(r.c.y))};
 	xx=_mm256_sub_pd(x,xx);
 	yy=_mm256_sub_pd(y,yy);
 	xx=_mm256_mul_pd(xx,yy);
