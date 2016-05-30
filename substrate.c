@@ -149,11 +149,11 @@ bool init_substrate(void){
 		r12.v = _mm_set_pd(r11.c.y+dy,r11.c.x);
 		r21.v = _mm_set_pd(r11.c.y,r11.c.x+dx);
 		r22.v = _mm_set_pd(r11.c.y+dx,r11.c.x+dx);
-		points_x[i]=_mm_set_pd(r11.c.x,r21.c.x);
-		points_y[2*i]=_mm_set_pd(r12.c.y,r12.c.y);
-		points_y[2*i+1]=_mm_set_pd(r11.c.y,r11.c.y);
-		coefficients[2*i]=_mm_set_pd(-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
-		coefficients[2*i+1]=_mm_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy);
+		points_x[i].v=_mm_set_pd(r11.c.x,r21.c.x);
+		points_y[2*i].v=_mm_set_pd(r12.c.y,r12.c.y);
+		points_y[2*i+1].v=_mm_set_pd(r11.c.y,r11.c.y);
+		coefficients[2*i].v=_mm_set_pd(-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
+		coefficients[2*i+1].v=_mm_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy);
 	}
 #endif
 	sample_energy();
