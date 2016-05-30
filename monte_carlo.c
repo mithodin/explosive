@@ -227,7 +227,7 @@ bool mc_init_particles(void){
 #elif PARTICLES_INIT_RANDOM == 0
 	int particles_num_cols,particles_num_rows;
 	particles_num_cols=(int)ceil(sqrt(NUMBER_OF_PARTICLES*SIZE_X*1.0/SIZE_Y));
-	particles_num_rows=(int)ceil(NUMBER_OF_PARTICLES/particles_num_cols);
+	particles_num_rows=(int)ceil(1.0*NUMBER_OF_PARTICLES/particles_num_cols);
 	double dx=SIZE_X/particles_num_cols;
 	double dy=SIZE_Y/particles_num_rows;
 #endif
@@ -251,8 +251,6 @@ bool mc_init_particles(void){
 				}
 			}
 		}while(collision);
-		particles[i].external_energy=external_energy(particles[i].position);
-		particles[i].particles_index=i;
 #else //init in a square lattice
 		particles[i].position.v=_mm_set_pd(((i/particles_num_cols)+0.5)*dy,((i%particles_num_cols)+0.5)*dx);
 		particles[i].phi=2.0*M_PI*dsfmt_genrand_open_close(&rng);
@@ -264,6 +262,8 @@ bool mc_init_particles(void){
 			}
 		}
 #endif
+		particles[i].external_energy=external_energy(particles[i].position);
+		particles[i].particles_index=i;
 	}
 	init_ysorted_list();
 	init_bonding_partners();
