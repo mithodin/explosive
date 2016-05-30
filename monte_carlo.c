@@ -224,6 +224,12 @@ bool mc_init_particles(void){
 		particles[i].particles_index=i;
 	}
 	free(old_positions);
+#elif PARTICLES_INIT_RANDOM == 0
+	int particles_num_cols,particles_num_rows;
+	particles_num_cols=(int)ceil(sqrt(NUMBER_OF_PARTICLES*SIZE_X*1.0/SIZE_Y));
+	particles_num_rows=(int)ceil(NUMBER_OF_PARTICLES/particles_num_cols);
+	double dx=SIZE_X/particles_num_cols;
+	double dy=SIZE_Y/particles_num_rows;
 #endif
 	double d;
 	bool collision=false;
@@ -232,6 +238,7 @@ bool mc_init_particles(void){
 #else
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 #endif
+#if PARTICLES_INIT_RANDOM == 1 || defined(CONTINUE)
 		do{
 			particles[i].position.v=_mm_set_pd(SIZE_Y*dsfmt_genrand_open_close(&rng),SIZE_X*dsfmt_genrand_open_close(&rng));
 			particles[i].phi=2.0*M_PI*dsfmt_genrand_open_close(&rng);
@@ -246,6 +253,17 @@ bool mc_init_particles(void){
 		}while(collision);
 		particles[i].external_energy=external_energy(particles[i].position);
 		particles[i].particles_index=i;
+#else //init in a square lattice
+		particles[i].position.v=_mm_set_pd(((i/particles_num_cols)+0.5)*dy,((i%particles_num_cols)+0.5)*dx);
+		particles[i].phi=2.0*M_PI*dsfmt_genrand_open_close(&rng);
+		for(int j=0;j<i;++j){
+			distance(particles[i].position,particles[j].position,&d);
+			if(d<COLLOID_DIAMETER){
+				printf("> Error: Too many particles\n");
+				return false;
+			}
+		}
+#endif
 	}
 	init_ysorted_list();
 	init_bonding_partners();
