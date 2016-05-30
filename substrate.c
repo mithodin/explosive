@@ -176,8 +176,8 @@ double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
 }
 #else
 double grid_interpolate(vector2d r, vector2d x, vector2d y1, vector2d y2, vector2d coeff1, vector2d coeff2){
-	vector2d xx1.v=_mm_load_pd1(&(r.c.x));
-	vector2d yy1.v=_mm_load_pd1(&(r.c.y));
+	vector2d xx1=_mm_load_pd1(&(r.c.x));
+	vector2d yy1=_mm_load_pd1(&(r.c.y));
 	vector2d xx2,yy2;
 	xx1.v=_mm_sub_pd(x.v,xx1.v);
 	xx2.v=_mm_sub_pd(x.v,xx1.v);
