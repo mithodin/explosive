@@ -133,8 +133,10 @@ double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
 	yy=_mm256_sub_pd(y,yy);
 	xx=_mm256_mul_pd(xx,yy);
 	xx=_mm256_mul_pd(xx,coeff);
-	xx=_mm256_hadd_pd(xx,xx);
-	return xx[0]+xx[2];
+	double *res;
+	posix_memalign(&res,32*sizeof(void *),sizeof(double));
+	_mm256_store_pd(res,_mm256_hadd_pd(xx,xx));
+	return res[0]+res[2];
 }
 
 bool substrate_collision(vector2d *patches, vector2d new, int i){
