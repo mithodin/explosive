@@ -3,4 +3,4 @@
  * @brief Calculate cluster size
  */
 
-int largest_cluster_size(void);
+int largest_cluster_size(double *);

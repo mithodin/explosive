@@ -112,13 +112,13 @@ double monte_carlo_step(void){
 double mc_run(int steps, bool log){
 	char percent_complete[103];
 	double complete=0.0;
-	double acceptance_probability=0.0;
+	double acceptance_probability=0.0,bonding_probability;
 	unsigned long runtime,rth,rtm,hours,minutes,seconds;
 	int largest_cluster;
 	struct timeval t0,t1;
 	if(log){
 		gettimeofday(&t0,NULL);
-		log_enqueue(0,false,(unsigned long)(t0.tv_sec-sim_start_time.tv_sec),0);
+		log_enqueue(0,false,(unsigned long)(t0.tv_sec-sim_start_time.tv_sec),0,0);
 	}
 	for(int i=0;i<steps;){
 		for(int j=0;j<LOGGING_INTERVAL && i<steps;++j){
@@ -128,8 +128,8 @@ double mc_run(int steps, bool log){
 		if(log){
 			gettimeofday(&t1,NULL);
 			runtime=time_hm((unsigned long)(t1.tv_sec-sim_start_time.tv_sec),&rtm,&rth);
-			largest_cluster=largest_cluster_size();
-			log_enqueue(i,i==steps,runtime,largest_cluster);
+			largest_cluster=largest_cluster_size(&bonding_probability);
+			log_enqueue(i,i==steps,runtime,largest_cluster,bonding_probability);
 			complete=1.0*i/steps;
 			mkpercent(percent_complete,103,complete);
 			seconds=time_hm((unsigned long)(1.0*(steps-i)/LOGGING_INTERVAL*timediff_seconds(&t1,&t0)),&minutes,&hours);
