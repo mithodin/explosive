@@ -13,7 +13,9 @@ typedef union _vec2d {
 		double y;
 	} c;
 } vector2d;
+#ifdef __AVX__
 typedef __m256d vector4d;
+#endif
 
 double distance_direct(double, double, double, double);
 vector2d distance(vector2d, vector2d, double*);

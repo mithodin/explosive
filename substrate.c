@@ -21,10 +21,18 @@ bool substrate_collision(vector2d *, vector2d, int);
 double energy_single_well(double);
 double energy_raw(double);
 void sample_energy(void);
+#ifdef __AVX__
 double grid_interpolate(vector2d, vector4d, vector4d, vector4d);
+#else
+double grid_interpolate(vector2d, vector2d, vector2d, vector2d, vector2d, vector2d);
+#endif
 double energy_substrate_direct(vector2d);
 
+#ifdef __AVX__
 vector4d *coefficients, *points_x, *points_y;
+#else
+vector2d *coefficients, *points_x, *points_y;
+#endif
 int grid_res_x,grid_res_y;
 double cutoff_r,dx,dy;
 vector2d patches[SUBSTRATE_NUMBER_OF_PATCHES];
@@ -41,7 +49,11 @@ double external_energy(vector2d position){
 	column = (int)(position.c.x/dx);
 	row = (int)(position.c.y/dy);
 	i = row*grid_res_x+column;
+#ifdef __AVX__
 	return grid_interpolate(position, points_x[i], points_y[i], coefficients[i]);
+#else
+	return grid_interpolate(position, points_x[i], points_y[2*i], points_y[2*i+1], coefficients[2*i], coefficients[2*i+1]);
+#endif
 #else
 	return 0.0;
 #endif
@@ -104,6 +116,8 @@ bool init_substrate(void){
 		printf("> Error storing patch locations\n");
 		return false;
 	};
+
+#ifdef __AVX__
 	coefficients=calloc(grid_res_x*grid_res_y,sizeof(vector4d));
 	points_x=calloc(grid_res_x*grid_res_y,sizeof(vector4d));
 	points_y=calloc(grid_res_x*grid_res_y,sizeof(vector4d));
@@ -121,11 +135,33 @@ bool init_substrate(void){
 		points_y[i]=_mm256_set_pd(r11.c.y,r11.c.y,r12.c.y,r12.c.y);
 		coefficients[i]=_mm256_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy,-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
 	}
+#else //only SSE available
+	coefficients=calloc(grid_res_x*grid_res_y*2,sizeof(vector2d));
+	points_x=calloc(grid_res_x*grid_res_y,sizeof(vector2d));
+	points_y=calloc(grid_res_x*grid_res_y*2,sizeof(vector2d));
+	vector2d r11,r12,r21,r22;
+	dx=SIZE_X/grid_res_x;
+	dy=SIZE_Y/grid_res_y;
+	vector2d rx, ry;
+	for(int i=0;i<grid_res_x*grid_res_y;++i){
+		r11.c.x=(i%grid_res_x)*dx;
+		r11.c.y=(i/grid_res_x)*dy;
+		r12.v = _mm_set_pd(r11.c.y+dy,r11.c.x);
+		r21.v = _mm_set_pd(r11.c.y,r11.c.x+dx);
+		r22.v = _mm_set_pd(r11.c.y+dx,r11.c.x+dx);
+		points_x[i]=_mm_set_pd(r11.c.x,r21.c.x);
+		points_y[2*i]=_mm_set_pd(r12.c.y,r12.c.y);
+		points_y[2*i+1]=_mm_set_pd(r11.c.y,r11.c.y);
+		coefficients[2*i]=_mm_set_pd(-energy_substrate_direct(r21)/dx/dy,energy_substrate_direct(r11)/dx/dy);
+		coefficients[2*i+1]=_mm_set_pd(energy_substrate_direct(r22)/dx/dy,-energy_substrate_direct(r12)/dx/dy);
+	}
+#endif
 	sample_energy();
 #endif //END IF NO PATCHES
 	return true;
 }
 
+#ifdef __AVX__
 double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
 	vector4d xx=_mm256_broadcast_sd(&(r.c.x));
 	vector4d yy=_mm256_broadcast_sd(&(r.c.y));
@@ -138,6 +174,23 @@ double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
 	_mm256_store_pd(res,_mm256_hadd_pd(xx,xx));
 	return res[0]+res[2];
 }
+#else
+double grid_interpolate(vector2d r, vector2d x, vector2d y1, vector2d y2, vector2d coeff1, vector2d coeff2){
+	vector2d xx1.v=_mm_load_pd1(&(r.c.x));
+	vector2d yy1.v=_mm_load_pd1(&(r.c.y));
+	vector2d xx2,yy2;
+	xx1.v=_mm_sub_pd(x.v,xx1.v);
+	xx2.v=_mm_sub_pd(x.v,xx1.v);
+	yy1.v=_mm_sub_pd(y1.v,yy1.v);
+	yy2.v=_mm_sub_pd(y2.v,yy1.v);
+	xx1.v=_mm_mul_pd(xx1.v,yy1.v);
+	xx2.v=_mm_mul_pd(xx2.v,yy2.v);
+	xx1.v=_mm_mul_pd(xx1.v,coeff1.v);
+	xx2.v=_mm_mul_pd(xx2.v,coeff2.v);
+	xx1.v=_mm_hadd_pd(xx1.v,xx2.v);
+	return xx1.c.x+xx1.c.y;
+}
+#endif
 
 bool substrate_collision(vector2d *patches, vector2d new, int i){
 	double d=0;
