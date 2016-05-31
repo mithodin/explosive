@@ -169,9 +169,8 @@ double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
 	yy=_mm256_sub_pd(y,yy);
 	xx=_mm256_mul_pd(xx,yy);
 	xx=_mm256_mul_pd(xx,coeff);
-	double *res;
-	posix_memalign((void*)&res,32*sizeof(void *),4*sizeof(double));
-	_mm256_store_pd(res,_mm256_hadd_pd(xx,xx));
+	double res[4];
+	_mm256_storeu_pd(res,_mm256_hadd_pd(xx,xx));
 	return res[0]+res[2];
 }
 #else
