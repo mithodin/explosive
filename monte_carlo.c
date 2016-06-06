@@ -412,8 +412,8 @@ bool mc_init(double kbt){
 
 #ifndef CONTINUE
 	//thermalize
-	mc_init_acceptance_probabilities(2.0);
-	mc_run(100,false);
+	mc_init_acceptance_probabilities(100.0);
+	mc_run(1000,false);
 #endif
 
 	mc_init_acceptance_probabilities(kbt);
