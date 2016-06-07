@@ -158,8 +158,7 @@ bool init_substrate(void){
 #endif
 	sample_energy();
 #endif //END IF NO PATCHES
-	//return true;
-	return false;
+	return true;
 }
 
 #ifdef __AVX__
