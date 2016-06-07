@@ -158,7 +158,8 @@ bool init_substrate(void){
 #endif
 	sample_energy();
 #endif //END IF NO PATCHES
-	return true;
+	//return true;
+	return false;
 }
 
 #ifdef __AVX__
@@ -177,16 +178,15 @@ double grid_interpolate(vector2d r, vector4d x, vector4d y, vector4d coeff){
 double grid_interpolate(vector2d r, vector2d x, vector2d y1, vector2d y2, vector2d coeff1, vector2d coeff2){
 	vector2d xx1={_mm_load_pd1(&(r.c.x))};
 	vector2d yy1={_mm_load_pd1(&(r.c.y))};
-	vector2d xx2,yy2;
+	vector2d yy2;
 	xx1.v=_mm_sub_pd(x.v,xx1.v);
-	xx2.v=_mm_sub_pd(x.v,xx1.v);
-	yy1.v=_mm_sub_pd(y1.v,yy1.v);
 	yy2.v=_mm_sub_pd(y2.v,yy1.v);
-	xx1.v=_mm_mul_pd(xx1.v,yy1.v);
-	xx2.v=_mm_mul_pd(xx2.v,yy2.v);
-	xx1.v=_mm_mul_pd(xx1.v,coeff1.v);
-	xx2.v=_mm_mul_pd(xx2.v,coeff2.v);
-	xx1.v=_mm_hadd_pd(xx1.v,xx2.v);
+	yy1.v=_mm_sub_pd(y1.v,yy1.v);
+	yy1.v=_mm_mul_pd(xx1.v,yy1.v);
+	yy2.v=_mm_mul_pd(xx1.v,yy2.v);
+	yy1.v=_mm_mul_pd(yy1.v,coeff1.v);
+	yy2.v=_mm_mul_pd(yy2.v,coeff2.v);
+	xx1.v=_mm_hadd_pd(yy1.v,yy2.v);
 	return xx1.c.x+xx1.c.y;
 }
 #endif
@@ -228,12 +228,23 @@ void sample_energy(void){
 	FILE *energy_file = fopen("potential.dat","w");
 	vector2d test;
 	for(int i=0;i<1000;++i){
-		test.c.x = i*SIZE_X/1000.0;
+		test.c.x = (i+0.5)*SIZE_X/1000.0;
 		for(int j=0;j<1000;++j){
-			test.c.y = j*SIZE_Y/1000.0;
+			test.c.y = (j+0.5)*SIZE_Y/1000.0;
 			//fprintf(energy_file,"%1.5f\t%1.5f\t%1.10f\n",test.c.x,test.c.y,external_energy(test));
 			fprintf(energy_file,"%1.5f\t%1.5f\t%1.10f\t%1.10f\n",test.c.x,test.c.y,energy_substrate_direct(test),external_energy(test));
 		}
 	}
 	fclose(energy_file);
+
+//	FILE *coeff = fopen("coefficients.dat","w");
+//	for(int i=0;i<grid_res_x*grid_res_y;++i){
+//	#ifdef __AVX__
+//		vector4d c=coefficients[i],x=points_x[i],y=points_y[i];
+//		fprintf(coeff,"%7.5e\t%7.5e\t%7.5e\t%7.5e @ (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e)\n",c[0],c[1],c[2],c[3],x[1],y[2],x[0],y[2],x[0],y[0],x[1],y[0]);
+//	#else
+//		fprintf(coeff,"%7.5e\t%7.5e\t%7.5e\t%7.5e @ (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e)\n",coefficients[2*i].c.x,coefficients[2*i].c.y,coefficients[2*i+1].c.x,coefficients[2*i+1].c.y,points_x[i].c.y,points_y[2*i+1].c.x,points_x[i].c.x,points_y[2*i+1].c.x,points_x[i].c.x,points_y[2*i].c.x,points_x[i].c.y,points_y[2*i].c.x);
+//	#endif
+//	}
+//	fclose(coeff);
 }

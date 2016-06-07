@@ -14,15 +14,15 @@
  * @return The distance between two points
  */
 double distance_direct(double x1,double y1,double x2,double y2){
-	double dx=x1-x2;
+	double diff_x=x1-x2;
 	#ifdef PERIODIC_X
-	dx=dx>(SIZE_X/2)?dx-SIZE_X:dx;
+	diff_x=diff_x>(SIZE_X/2)?diff_x-SIZE_X:diff_x;
 	#endif
-	double dy=y1-y2;
+	double diff_y=y1-y2;
 	#ifdef PERIODIC_Y
-	dy=dy>(SIZE_Y/2)?dy-SIZE_Y:dy;
+	diff_y=diff_y>(SIZE_Y/2)?diff_y-SIZE_Y:diff_y;
 	#endif
-	return sqrt(dx*dx+dy*dy);
+	return sqrt(diff_x*diff_x+diff_y*diff_y);
 }
 
 /**
