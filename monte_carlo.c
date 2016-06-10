@@ -38,6 +38,7 @@ bool mc_init_max_displacement(double);
 double timediff_seconds(struct timeval *, struct timeval *);
 unsigned long time_hm(unsigned long, unsigned long *, unsigned long *);
 void shuffle_float(size_t, size_t, float *);
+void shuffle_double(size_t, size_t, double *);
 
 double acceptance_probabilities_bonds[7]; /**< pre-calculated acceptance probabilities for breaking and making bonds */
 double temperature; /**< System temperature in kbT */
