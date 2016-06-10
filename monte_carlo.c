@@ -22,7 +22,8 @@
 hid_t configuration;
 hid_t conf_group;
 unsigned int old_number_of_particles;
-float *old_positions;
+void *old_positions;
+bool oldpos_float;
   #ifndef OLD_LOGFILE
 extern hid_t logfile;
   #endif
@@ -215,13 +216,24 @@ bool mc_init_particles(void){
 	printf("> initializing particles... ");
 	fflush(NULL);
 #ifdef CONTINUE
-	shuffle_float((size_t)old_number_of_particles,3,old_positions);
-	for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
-		particles[i].position.c.x=old_positions[3*i];
-		particles[i].position.c.y=old_positions[3*i+1];
-		particles[i].phi=old_positions[3*i+1];
-		particles[i].external_energy=external_energy(particles[i].position);
-		particles[i].particles_index=i;
+	if(oldpos_float){
+		shuffle_float((size_t)old_number_of_particles,3,(float*)old_positions);
+		for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
+			particles[i].position.c.x=((float *)old_positions)[3*i];
+			particles[i].position.c.y=((float *)old_positions)[3*i+1];
+			particles[i].phi=((float *)old_positions)[3*i+1];
+			particles[i].external_energy=external_energy(particles[i].position);
+			particles[i].particles_index=i;
+		}
+	}else{
+		shuffle_double((size_t)old_number_of_particles,3,(double*)old_positions);
+		for(int i=0;i<old_number_of_particles && i < NUMBER_OF_PARTICLES;++i){
+			particles[i].position.c.x=((double *)old_positions)[3*i];
+			particles[i].position.c.y=((double *)old_positions)[3*i+1];
+			particles[i].phi=((double *)old_positions)[3*i+1];
+			particles[i].external_energy=external_energy(particles[i].position);
+			particles[i].particles_index=i;
+		}
 	}
 	free(old_positions);
 #elif PARTICLES_INIT_RANDOM == 0
@@ -394,8 +406,14 @@ bool mc_init(double kbt){
 	status = H5TBread_records(conf_group, "simulation_frames", number_of_records-1, 1, type_size, field_offsets, field_sizes, record_buffer);
 	if( status < 0 ){ printf("> Error reading old configuration\n"); return false; }
 
-	old_positions = calloc(old_number_of_particles, 3*sizeof(float));
-	memcpy(old_positions,record_buffer+position,old_number_of_particles*3*sizeof(float));
+	for(int i=0;i<number_of_fields;++i){
+		if(strcmp(field_names[i],"position")==0){
+			oldpos_float=field_sizes[i]/old_number_of_particles/3==sizeof(float);
+		}
+	}
+
+	old_positions = calloc(old_number_of_particles, oldpos_float?3*sizeof(float):3*sizeof(double));
+	memcpy(old_positions,record_buffer+position,old_number_of_particles*3*(oldpos_float?sizeof(float):sizeof(double)));
 
 	free(record_buffer);
 	status = H5Gclose(conf_group);
@@ -458,6 +476,25 @@ void shuffle_float(size_t size, size_t elem, float *array){
 			memcpy(tmp,array+random_index*elem,elem*sizeof(float));
 			memcpy(array+random_index*elem,array+i*elem,elem*sizeof(float));
 			memcpy(array+i*elem,tmp,elem*sizeof(float));
+		}
+	}
+	free(tmp);
+}
+
+/**
+ * Shuffle a size*elem-length array of doubles. Blocks of length elem will be kept intact
+ *
+ * @param size The number of elem-length blocks of doubles in the array
+ * @param elem The length of the elementary blocks (will be swapped as one)
+ */
+void shuffle_double(size_t size, size_t elem, double *array){
+	double *tmp=calloc(elem,sizeof(double));
+	for(int i=(int)size-1;i>=0;--i){
+		int random_index = (int)floor(dsfmt_genrand_close_open(&rng)*i);
+		if(random_index != i){
+			memcpy(tmp,array+random_index*elem,elem*sizeof(double));
+			memcpy(array+random_index*elem,array+i*elem,elem*sizeof(double));
+			memcpy(array+i*elem,tmp,elem*sizeof(double));
 		}
 	}
 	free(tmp);
