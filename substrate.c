@@ -33,6 +33,10 @@ vector4d *coefficients, *points_x, *points_y;
 #else
 vector2d *coefficients, *points_x, *points_y;
 #endif
+#if SUBSTRATE_PATTERN > 0
+int patches_x,patches_y;
+double sx,sy;
+#endif
 int grid_res_x,grid_res_y;
 double cutoff_r,dx,dy;
 vector2d patches[SUBSTRATE_NUMBER_OF_PATCHES];
@@ -88,8 +92,9 @@ bool init_substrate(void){
 	}
 #else
 	#if SUBSTRATE_PATTERN > 0
-	int patches_x = (int)sqrt(SUBSTRATE_NUMBER_OF_PATCHES), patches_y = SUBSTRATE_NUMBER_OF_PATCHES/patches_x;
-	double sx = SIZE_X/patches_x, sy = SIZE_Y/patches_y;
+	patches_x = (int)sqrt(SUBSTRATE_NUMBER_OF_PATCHES);
+	patches_y = SUBSTRATE_NUMBER_OF_PATCHES/patches_x;
+	sx = SIZE_X/patches_x, sy = SIZE_Y/patches_y;
 	#endif
 	#if SUBSTRATE_PATTERN == 0
 	int j=0;
@@ -202,12 +207,40 @@ bool substrate_collision(vector2d *patches, vector2d new, int i){
 }
 
 double energy_substrate_direct(vector2d r){
+	#if SUBSTRATE_CONTINUOUS == 2
+		#if SUBSTRATE_PATTERN == 0
+	//random
+	return 0.0; //not implemented yet
+		#elif SUBSTRATE_PATTERN == 1
+	//trigonal
+	return 0.0; //not implemented yet
+		#elif SUBSTRATE_PATTERN == 2
+	//square
+	double d = 0.0;
+	int x=patches_x*r.c.x/SIZE_X;
+	x=x>=patches_x?patches_x-1:x;
+	int y=patches_y*r.c.y/SIZE_Y;
+	y=y>=patches_y?patches_y-1:y;
+	int i=x+patches_x*y;
+	vector2d dr=distance(r,patches[i],&d);
+	if( d < SUBSTRATE_WELL_RADIUS ){
+		return -ENERGY_WELL_DEPTH;
+	}else{
+		double alpha=fabs(sx/2.0/dr.c.x),beta=fabs(sy/2.0/dr.c.y);
+		double border = (alpha<beta?alpha*d:beta*d)-SUBSTRATE_WELL_RADIUS;
+		return (pow((d-SUBSTRATE_WELL_RADIUS)/border,2.0)-1.0)*ENERGY_WELL_DEPTH;
+	}
+		#else
+	return 0.0; //invalid pattern
+		#endif
+	#else
 	double d=0.0,e=0.0;
 	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
 		distance(r,patches[i],&d);
 		e+=energy_single_well(d);
 	}
 	return e;
+	#endif
 }
 
 double energy_single_well(double distance){
@@ -216,6 +249,8 @@ double energy_single_well(double distance){
 	return distance<SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:(distance>cutoff_r?0.0:(frc-energy_raw(distance))/(frc/ENERGY_WELL_DEPTH-1.0));
 	#elif SUBSTRATE_CONTINUOUS == 0
 	return distance < SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:0.0;
+	#else
+	return 0.0;
 	#endif
 }
 
@@ -235,15 +270,4 @@ void sample_energy(void){
 		}
 	}
 	fclose(energy_file);
-
-//	FILE *coeff = fopen("coefficients.dat","w");
-//	for(int i=0;i<grid_res_x*grid_res_y;++i){
-//	#ifdef __AVX__
-//		vector4d c=coefficients[i],x=points_x[i],y=points_y[i];
-//		fprintf(coeff,"%7.5e\t%7.5e\t%7.5e\t%7.5e @ (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e)\n",c[0],c[1],c[2],c[3],x[1],y[2],x[0],y[2],x[0],y[0],x[1],y[0]);
-//	#else
-//		fprintf(coeff,"%7.5e\t%7.5e\t%7.5e\t%7.5e @ (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e) -- (%7.5e,%7.5e)\n",coefficients[2*i].c.x,coefficients[2*i].c.y,coefficients[2*i+1].c.x,coefficients[2*i+1].c.y,points_x[i].c.y,points_y[2*i+1].c.x,points_x[i].c.x,points_y[2*i+1].c.x,points_x[i].c.x,points_y[2*i].c.x,points_x[i].c.y,points_y[2*i].c.x);
-//	#endif
-//	}
-//	fclose(coeff);
 }
