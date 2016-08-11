@@ -80,22 +80,35 @@ bool init_substrate(void){
 
 	cutoff_r=SIZE_X<SIZE_Y?SIZE_X/2.0:SIZE_Y/2.0;
 
-#ifdef CONTINUE
-	double buffer[SUBSTRATE_NUMBER_OF_PATCHES*2];
-	herr_t status = H5LTread_dataset_double(conf_group,"random_patches",buffer);
-	if( status < 0 ){
-		printf("> Error reading patch locations\n");
-		return false;
-	}
-	for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
-		patches[i].v=_mm_load_pd(&(buffer[2*i]));
-	}
-#else
-	#if SUBSTRATE_PATTERN > 0
+#if SUBSTRATE_PATTERN > 0
 	patches_x = (int)sqrt(SUBSTRATE_NUMBER_OF_PATCHES);
 	patches_y = SUBSTRATE_NUMBER_OF_PATCHES/patches_x;
 	sx = SIZE_X/patches_x, sy = SIZE_Y/patches_y;
-	#endif
+#endif
+#ifdef CONTINUE
+	int tmp_dims;
+	herr_t status = H5LTget_dataset_ndims(conf_group,"random_patches",&tmp_dims);
+	hsize_t *tmp_sizes = calloc(tmp_dims,sizeof(hsize_t));
+	H5T_class_t tmp_id;
+	size_t tmp_typesize;
+	status = H5LTget_dataset_info(conf_group,"random_patches",tmp_sizes,&tmp_id,&tmp_typesize);
+	if( tmp_dims == 2 && tmp_sizes[0] == SUBSTRATE_NUMBER_OF_PATCHES && tmp_sizes[1] == 2 ){
+		free(tmp_sizes);
+		double buffer[SUBSTRATE_NUMBER_OF_PATCHES*2];
+		status = H5LTread_dataset_double(conf_group,"random_patches",buffer);
+		if( status < 0 ){
+			printf("> Error reading patch locations\n");
+			return false;
+		}
+		for(int i=0;i<SUBSTRATE_NUMBER_OF_PATCHES;++i){
+			patches[i].v=_mm_load_pd(&(buffer[2*i]));
+		}
+	}else{
+		free(tmp_sizes);
+		printf("> Error: wrong number of patches in loaded file.\n");
+		return false;
+	}
+#else
 	#if SUBSTRATE_PATTERN == 0
 	int j=0;
 	#endif
