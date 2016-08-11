@@ -104,24 +104,37 @@ bool h5log_init(void){
 	const unsigned int monte_carlo_steps_main=MONTE_CARLO_STEPS_MAIN;
 	status = H5LTset_attribute_uint(group, directory_name, "monte-carlo-steps-main", &monte_carlo_steps_main, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	#ifdef SUBSTRATE_TRIGONAL
-	const unsigned int substrate_wells_x=SUBSTRATE_WELLS_X;
-	status = H5LTset_attribute_uint(group, directory_name, "substrate-wells-x", &substrate_wells_x, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	const unsigned int substrate_wells_y=SUBSTRATE_WELLS_Y;
-	status = H5LTset_attribute_uint(group, directory_name, "substrate-wells-y", &substrate_wells_y, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	const double offset_odd=SUBSTRATE_OFFSET_ODD;
-	status = H5LTset_attribute_double(group, directory_name, "substrate-offet-odd", &offset_odd, 1);
-	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	#endif
-	#ifdef SUBSTRATE_RANDOM
 	const unsigned int substrate_number_of_patches=SUBSTRATE_NUMBER_OF_PATCHES;
 	status = H5LTset_attribute_uint(group, directory_name, "substrate-number-of-patches", &substrate_number_of_patches, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
-	#endif
 	const double substrate_well_radius=SUBSTRATE_WELL_RADIUS;
 	status = H5LTset_attribute_double(group, directory_name, "substrate-well-radius", &substrate_well_radius, 1);
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	#if SUBSTRATE_PATTERN == 0
+	status = H5LTset_attribute_string(group, directory_name, "substrate-pattern", "random");
+	#elif SUBSTRATE_PATTERN == 1
+	status = H5LTset_attribute_string(group, directory_name, "substrate-pattern", "trigonal");
+	#elif SUBSTRATE_PATTERN == 2
+	status = H5LTset_attribute_string(group, directory_name, "substrate-pattern", "square");
+	#endif
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+
+	#if SUBSTRATE_CONTINUOUS == 0
+	status = H5LTset_attribute_string(group, directory_name, "substrate-type", "discontinuous");
+	#elif SUBSTRATE_CONTINUOUS == 1
+	status = H5LTset_attribute_string(group, directory_name, "substrate-type", "continuous (1/r^2)");
+	#elif SUBSTRATE_CONTINUOUS == 2
+	status = H5LTset_attribute_string(group, directory_name, "substrate-type", "continuous (r^2)");
+	#endif
+	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+
+	#ifdef CONTINUE
+	status = H5LTset_attribute_string(group, directory_name, "particles-init", "load");
+	#elif PARTICLES_INIT_RANDOM == 0
+	status = H5LTset_attribute_string(group, directory_name, "particles-init", "square lattice");
+	#else
+	status = H5LTset_attribute_string(group, directory_name, "particles-init", "random");
+	#endif
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 
 	//create simulation frame table
