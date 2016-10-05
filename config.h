@@ -8,9 +8,9 @@
 /** give a short description of the simulation */
 #define SIMULATION_NAME "Development"
 /** width of the simulation box */
-#define SIZE_X 100.0
+#define SIZE_X 40.0
 /** height of the simulation box */
-#define SIZE_Y 100.0
+#define SIZE_Y 40.0
 /** should the box have periodic boundary conditions in x? Comment out if not. */
 #define PERIODIC_X
 /** should the box have periodic boundary conditions in y? Comment out if not. */
@@ -22,7 +22,7 @@
 /** This should be the sum of COLLOID_DIAMETER and COLLOID_PATCH_DIAMETER */
 #define COLLOID_MIN_BONDING_DISTANCE 1.11965683746373795115
 /** define the energy of a particle in a well on the substrate */
-#define ENERGY_WELL_DEPTH 4.0
+#define ENERGY_WELL_DEPTH 3.0
 /** define the energy of a single bond */
 #define ENERGY_BOND 1.0
 /** temperature in kbT */
@@ -42,7 +42,7 @@
 /** Whether or not the potential should be continuous. 0 = Square well, 1 = Continuous 1/r^2, 2 = continuous r^2  */
 #define SUBSTRATE_CONTINUOUS 2
 /** Set the number of patches */
-#define SUBSTRATE_NUMBER_OF_PATCHES 25
+#define SUBSTRATE_NUMBER_OF_PATCHES 4
 /** stepsize for equilibration smoothing*/
 #define EQUILIBRATION_SMOOTHING_STEP 1000
 /** slope (energy change per mc step) cutoff criterion for equilibration */
