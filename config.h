@@ -43,6 +43,10 @@
 #define SUBSTRATE_CONTINUOUS 2
 /** Set the number of patches */
 #define SUBSTRATE_NUMBER_OF_PATCHES 25
+/** Define stepsize for equilibration smoothing*/
+#define EQUILIBRATION_STEP 1000
+/** Define slope (energy change per mc step) cutoff criterion for equilibration */
+#define EQUILIBRATION_THRESHOLD_SLOPE 0.03
 
 /** Random initialization of particles? (1: random, 0: square lattice) */
 #define PARTICLES_INIT_RANDOM 0
