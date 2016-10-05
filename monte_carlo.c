@@ -145,6 +145,62 @@ double mc_run(int steps, bool log){
 }
 
 /**
+ * Run monte carlo steps until the system is equilibrated (see config.h)
+ */
+void mc_equilibrate(void){
+	double energy_buffer[EQUILIBRATION_SMOOTHING_STEP]={0};
+	double energy_buffer_smoothed[EQUILIBRATION_SMOOTHING_STEP]={0};
+	double energy_cumulative=0;
+	int energy_buffer_in=0;
+	int energy_smoothed_in=0;
+	int count_loops=0;
+	bool first_loop_done=false;
+	bool smoothing_ready=false;
+	printf("> Begin equilibration...\n");
+	while(true){
+		for(int i=0;i<EQUILIBRATION_INNER_LOOP;++i){
+			monte_carlo_step();
+		}
+		count_loops++;
+		energy_cumulative-=energy_buffer[energy_buffer_in];
+		energy_buffer[energy_buffer_in]=0;
+		for(int i=0;i<NUMBER_OF_PARTICLES;++i){
+			energy_buffer[energy_buffer_in]+=particles[i].external_energy+particles[i].internal_energy*ENERGY_BOND;
+			energy_cumulative+=energy_buffer[energy_buffer_in];
+		}
+		if(!first_loop_done && energy_buffer_in+1==EQUILIBRATION_SMOOTHING_STEP){
+			first_loop_done=true;
+		}
+		energy_buffer_in=(energy_buffer_in+1)%EQUILIBRATION_SMOOTHING_STEP;
+		if(first_loop_done){
+			if(!smoothing_ready && energy_smoothed_in+1 == EQUILIBRATION_SMOOTHING_STEP){
+				smoothing_ready=true;
+			}
+			if(smoothing_ready){
+				double m=fabs(energy_buffer_smoothed[energy_smoothed_in]-energy_cumulative)/(EQUILIBRATION_SMOOTHING_STEP*EQUILIBRATION_INNER_LOOP);
+				if( m < EQUILIBRATION_THRESHOLD_SLOPE ){
+					printf("\r> system equilibrated after %1.5e MC steps                                                    \n",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
+					return;
+				}
+				else{
+					printf("\r> equilibrating (current slope %1.2e, threshold %1.2e) [%1.5e MC steps]          ",m,EQUILIBRATION_THRESHOLD_SLOPE,1.0*count_loops*EQUILIBRATION_INNER_LOOP);
+					fflush(NULL);
+				}
+			}
+			else{
+				printf("\r> equilibrating [%1.5e MC steps]            ",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
+				fflush(NULL);
+			}	
+			energy_buffer_smoothed[energy_smoothed_in]=energy_cumulative;
+			energy_smoothed_in=(energy_smoothed_in+1)%EQUILIBRATION_SMOOTHING_STEP;
+		}else{
+			printf("\r> equilibrating [%1.5e MC steps]            ",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
+			fflush(NULL);
+		}
+	}
+}
+
+/**
  * Calculate the internal and external energy for the new particle
  *
  * @param new The new colloid

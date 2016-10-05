@@ -28,11 +28,11 @@
 /** temperature in kbT */
 #define TEMPERATURE 0.15
 /** how many particles? */
-#define NUMBER_OF_PARTICLES 10
+#define NUMBER_OF_PARTICLES 1000
 /** how many monte carlo steps? */
-#define MONTE_CARLO_STEPS_MAIN 10
+#define MONTE_CARLO_STEPS_MAIN 10000
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
-#define LOGGING_INTERVAL 1
+#define LOGGING_INTERVAL 1000
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
 #define LOGFILE "./simulation_data.h5"
 /** Set substrate pattern. 0 = Random, 1 = Trigonal, 2 = Square */
@@ -43,10 +43,12 @@
 #define SUBSTRATE_CONTINUOUS 2
 /** Set the number of patches */
 #define SUBSTRATE_NUMBER_OF_PATCHES 25
-/** Define stepsize for equilibration smoothing*/
-#define EQUILIBRATION_STEP 1000
-/** Define slope (energy change per mc step) cutoff criterion for equilibration */
-#define EQUILIBRATION_THRESHOLD_SLOPE 0.03
+/** stepsize for equilibration smoothing*/
+#define EQUILIBRATION_SMOOTHING_STEP 1000
+/** slope (energy change per mc step) cutoff criterion for equilibration */
+#define EQUILIBRATION_THRESHOLD_SLOPE 3e-5
+/** inner loop stepsize for equilibration */
+#define EQUILIBRATION_INNER_LOOP 1000
 
 /** Random initialization of particles? (1: random, 0: square lattice) */
 #define PARTICLES_INIT_RANDOM 0

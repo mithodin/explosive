@@ -4,3 +4,4 @@
  */
 bool mc_init(double);
 double mc_run(int, bool);
+void mc_equilibrate(void);
