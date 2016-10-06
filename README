@@ -14,3 +14,7 @@ cd to the bin directory and run the simulation
 REQUIREMENTS
  - Intel icc compiler (should be easy to change code to work with gcc, though)
  - hdf5 c bindings (libhdf5)
+
+DOCUMENTATION
+generate full documentation with doxygen:
+  doxygen doxy.conf
