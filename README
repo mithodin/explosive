@@ -5,9 +5,7 @@ create build directory, cd to it and run
   cmake ..
 followed by
   make
-All configuration is done via config.h. Why? Because it was easier and compile time is cheap, that's why.
-Seriously though, it is much less of a hassle to get logging and memory right if we know the system size
-at compile time.
+All configuration is done via config.h. Why? Because it was easier and compile time is cheap, that's why. Seriously though, it is much less of a hassle to get logging and memory right if we know the system size at compile time.
 
 RUN
 cd to the bin directory and run the simulation
