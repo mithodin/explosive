@@ -216,19 +216,26 @@ bool h5log_init(void){
  * Log the overall acceptance probability, execution time and a few others
  * @param acceptance_probability Average acceptance probability between 1.0 and 0.0.
  * @param execution_time Real execution time in seconds
- * @param max_displacement The maximum displacement used in the simulation. Important if simulation is to be continued.
- * @param max_rotation The maximum rotation used in the simulation. Important if simulation is to be continued.
  * @return Could it be successfully written to the log?
  */
-bool h5log_log_statistics(double acceptance_probability, unsigned long execution_time, double max_displacement, double max_rotation){
+bool h5log_log_statistics(double acceptance_probability, unsigned long execution_time){
 	printf("> Overall acceptance probability: %3.0f%%\n",acceptance_probability*100);
 	herr_t status = H5LTset_attribute_double(group, directory_name, "acceptance-probability", &acceptance_probability, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	printf("> Total execution time: %ld seconds\n",execution_time);
 	status = H5LTset_attribute_ulong(group, directory_name, "total-execution-time", &execution_time, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
+	return true;
+}
 
-	status = H5LTset_attribute_double(group, directory_name, "max-displacement", &max_displacement, 1);
+/**
+ * Log max displacement and rotation
+ * @param max_displacement Maximum displacement for a colloid
+ * @param max_rotation Maximum rotation for a colloid
+ * @return Could it be successfully written to the log?
+ */
+bool h5log_log_displacement(double max_displacement, double max_rotation){
+	herr_t status = H5LTset_attribute_double(group, directory_name, "max-displacement", &max_displacement, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
 	status = H5LTset_attribute_double(group, directory_name, "max-rotation", &max_rotation, 1);
 	if(status < 0){ printf("> H5Log experienced an error setting an attribute\n"); return false; }
@@ -319,6 +326,42 @@ bool h5log_close(void){
 	if(status < 0){ printf("> H5Log experienced an error closing the group\n"); return false; }
 	status = H5Fclose(logfile);
 	if(status < 0){ printf("> H5Log experienced an error closing the log file\n"); return false; }
+	return true;
+}
+
+/**
+ * Create checkpoint file on disk
+ * @return Was the flush successfull?
+ */
+bool h5log_checkpoint(void){
+	herr_t status = H5Fflush(logfile,H5F_SCOPE_GLOBAL);
+	if( status < 0){
+		return false;	
+	}
+
+	char cp_location[500];
+	snprintf(cp_location, sizeof(cp_location), "%s/%.100s-eq.h5", EQUILIBRATION_CHECKPOINT, SIMULATION_SHORT_NAME);
+
+	hid_t checkpoint;
+	int e_offset=0;
+	while( access( cp_location, F_OK ) == 0 ){
+		snprintf(cp_location, sizeof(cp_location), "%s/%.100s-eq-%d.h5", EQUILIBRATION_CHECKPOINT, SIMULATION_SHORT_NAME, e_offset);
+		++e_offset;
+	}
+
+	checkpoint = H5Fcreate(cp_location, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+	if(checkpoint < 0){
+		printf("> H5Log cannot open a file to create a checkpoint\n");
+		return false;
+	}
+
+	status = H5Ocopy(logfile, directory_name, checkpoint, directory_name, H5P_DEFAULT, H5P_DEFAULT);
+	if( status < 0 ){
+		return false;
+	}
+
+	status = H5Fclose(checkpoint);
+	if(status < 0){ printf("> H5Log experienced an error closing the checkpoint file\n"); return false; }
 	return true;
 }
 

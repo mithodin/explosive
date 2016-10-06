@@ -72,6 +72,24 @@ void *log_logging(void *arg){
 }
 
 /**
+ * Create loadable checkpoint on disk. This function is only safe to call if no log frames can be appended while it is running.
+ * @return Was it successfull?
+ */
+bool log_checkpoint(void){
+	int buffer_fill = LOG_BUFFER_SIZE;
+	while(buffer_fill > 0){ //make sure buffer is empty
+		sem_wait(&log_buffer_full);
+		--buffer_fill;
+	}
+	bool success=h5log_checkpoint();
+	while(buffer_fill < LOG_BUFFER_SIZE){ //free buffer again
+		sem_post(&log_buffer_full);
+		++buffer_fill;
+	}
+	return success;
+}
+
+/**
  * Add a simulation frame to the log buffer. May block when the buffer is full.
  * @param mc_time Current monte carlo step
  * @param simulation_done Is this the last frame?
@@ -121,7 +139,15 @@ bool log_close(void){
  * @return Could the stats be successfully written?
  */
 bool log_simulation_stats(unsigned long execution_time, double acceptance_probability){
-	return h5log_log_statistics(acceptance_probability,execution_time,max_displacement,max_rotation) && h5log_log_cluster_size();
+	return h5log_log_statistics(acceptance_probability,execution_time) && h5log_log_cluster_size();
+}
+
+/**
+ * Log max displacement and rotation
+ * @return Could it be successfully written?
+ */
+bool log_max_displacement(void){
+	return h5log_log_displacement(max_displacement,max_rotation);
 }
 
 /**

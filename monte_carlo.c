@@ -197,6 +197,12 @@ void mc_equilibrate(void){
 		energy_buffer_in=(energy_buffer_in+1)%EQUILIBRATION_SMOOTHING_STEP;
 	}
 	fclose(energy_log_debug);
+
+	double runtime=0.0,bonding_probability;
+	double largest_cluster=largest_cluster_size(&bonding_probability);
+	log_enqueue(0,false,runtime,largest_cluster,bonding_probability);
+
+	log_checkpoint(); //if it fails for some reason, it's a problem, but not a fatal one.
 }
 
 /**
@@ -391,7 +397,7 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 		printf("[too many iterations] ");
 	}
 	printf("done.\n");
-	return true;
+	return log_max_displacement();
 }
 
 /**
