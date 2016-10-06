@@ -153,16 +153,12 @@ void mc_equilibrate(void){
 	double energy_buffer_smoothed[EQUILIBRATION_SMOOTHING_STEP]={0};
 	double energy_cumulative=0;
 	int energy_buffer_in=0;
-	int energy_smoothed_in=0;
 	int count_loops=0;
 	bool first_loop_done=false;
-	bool smoothing_ready=false;
 	bool equilibrated=false;
 	printf("> Begin equilibration...\n");
 	while(!equilibrated){
-		for(int i=0;i<EQUILIBRATION_INNER_LOOP;++i){
-			monte_carlo_step();
-		}
+		mc_run(EQUILIBRATION_INNER_LOOP,false);
 		count_loops++;
 		energy_cumulative-=energy_buffer[energy_buffer_in]/EQUILIBRATION_SMOOTHING_STEP;
 		energy_buffer[energy_buffer_in]=0;
@@ -170,35 +166,33 @@ void mc_equilibrate(void){
 			energy_buffer[energy_buffer_in]+=particles[i].external_energy+particles[i].internal_energy*ENERGY_BOND/2.0;
 		}
 		energy_cumulative+=energy_buffer[energy_buffer_in]/EQUILIBRATION_SMOOTHING_STEP;
-		if(!first_loop_done && energy_buffer_in+1==EQUILIBRATION_SMOOTHING_STEP){
-			first_loop_done=true;
+		double m=2.0*EQUILIBRATION_THRESHOLD_SLOPE; //definitely above the threshold
+		if(!first_loop_done){
+			energy_buffer_smoothed[energy_buffer_in]=0;
+			for(int i=0;i<=energy_buffer_in;++i){
+				energy_buffer_smoothed[energy_buffer_in]+=energy_buffer[i];
+			}
+			energy_buffer_smoothed[energy_buffer_in]/=energy_buffer_in+1;
+			if(energy_buffer_in+1==EQUILIBRATION_SMOOTHING_STEP){
+				first_loop_done=true;
+			}
+			if(energy_buffer_in > 0){
+				m=(energy_buffer_smoothed[0]-energy_buffer_smoothed[energy_buffer_in])/(EQUILIBRATION_INNER_LOOP*energy_buffer_in);
+			}
 		}
 		else if(first_loop_done){
-			if(smoothing_ready){
-				double m=fabs(energy_buffer_smoothed[energy_smoothed_in]-energy_cumulative)/(EQUILIBRATION_SMOOTHING_STEP*EQUILIBRATION_INNER_LOOP);
-				if( m < EQUILIBRATION_THRESHOLD_SLOPE ){
-					printf("\r> system equilibrated after %1.5e MC steps                                                    \n",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
-					equilibrated=true;
-				}
-				else{
-					printf("\r> equilibrating (current slope %1.7e, threshold %1.2e) [%1.5e MC steps]          ",m,EQUILIBRATION_THRESHOLD_SLOPE,1.0*count_loops*EQUILIBRATION_INNER_LOOP);
-					fflush(NULL);
-				}
-			}
-			else{
-				printf("\r> equilibrating [%1.5e MC steps]            ",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
-				fflush(NULL);
-			}	
-			energy_buffer_smoothed[energy_smoothed_in]=energy_cumulative;
-			if(!smoothing_ready && energy_smoothed_in+1 == EQUILIBRATION_SMOOTHING_STEP){
-				smoothing_ready=true;
-			}
-			energy_smoothed_in=(energy_smoothed_in+1)%EQUILIBRATION_SMOOTHING_STEP;
-		}else{
-			printf("\r> equilibrating [%1.5e MC steps]            ",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
+			m=fabs(energy_buffer_smoothed[energy_buffer_in]-energy_cumulative)/(EQUILIBRATION_SMOOTHING_STEP*EQUILIBRATION_INNER_LOOP);
+			energy_buffer_smoothed[energy_buffer_in]=energy_cumulative;
+		}
+		if( m < EQUILIBRATION_THRESHOLD_SLOPE ){
+			printf("\r> system equilibrated after %1.5e MC steps                                                    \n",1.0*count_loops*EQUILIBRATION_INNER_LOOP);
+			equilibrated=true;
+		}
+		else{
+			printf("\r> equilibrating (current slope %1.7e, threshold %1.2e) [%1.5e MC steps]          ",m,EQUILIBRATION_THRESHOLD_SLOPE,1.0*count_loops*EQUILIBRATION_INNER_LOOP);
 			fflush(NULL);
 		}
-		fprintf(energy_log_debug,"%d\t%1.5e\t%1.5e\t%1.5e\n",count_loops*EQUILIBRATION_INNER_LOOP,energy_buffer[energy_buffer_in],energy_buffer_smoothed[energy_buffer_in],0.0);
+		fprintf(energy_log_debug,"%d\t%1.5e\t%1.5e\t%1.5e\n",count_loops*EQUILIBRATION_INNER_LOOP,energy_buffer[energy_buffer_in],energy_buffer_smoothed[energy_buffer_in],m);
 		fflush(energy_log_debug);
 		energy_buffer_in=(energy_buffer_in+1)%EQUILIBRATION_SMOOTHING_STEP;
 	}
