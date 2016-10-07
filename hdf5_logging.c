@@ -13,6 +13,7 @@
 #include "colloid.h"
 #include "simulation_frame.h"
 #include "globals.h"
+#include "helpers.h"
 
 hid_t logfile;
 hid_t group;
@@ -337,6 +338,12 @@ bool h5log_checkpoint(void){
 	herr_t status = H5Fflush(logfile,H5F_SCOPE_GLOBAL);
 	if( status < 0){
 		return false;	
+	}
+
+	if( access( EQUILIBRATION_CHECKPOINT, F_OK ) != 0 ){
+		if( mkdir_p(EQUILIBRATION_CHECKPOINT) != 0 ){
+			return false;
+		}
 	}
 
 	char cp_location[500];
