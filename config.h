@@ -30,7 +30,7 @@
 /** how many particles? */
 #define NUMBER_OF_PARTICLES 1000
 /** how many monte carlo steps? */
-#define MONTE_CARLO_STEPS_MAIN 100000
+#define MONTE_CARLO_STEPS_MAIN 100
 /** in what interval (in monte carlo steps) should frames be saved to file during the main simulation phase? First and last frame are always saved. */
 #define LOGGING_INTERVAL 1000
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
@@ -38,15 +38,15 @@
 /** Set substrate pattern. 0 = Random, 1 = Trigonal, 2 = Square */
 #define SUBSTRATE_PATTERN 2
 /** Define the radius of a well */
-#define SUBSTRATE_WELL_RADIUS 8.0
+#define SUBSTRATE_WELL_RADIUS 12.0
 /** Whether or not the potential should be continuous. 0 = Square well, 1 = Continuous 1/r^2, 2 = continuous r^2  */
-#define SUBSTRATE_CONTINUOUS 2
+#define SUBSTRATE_CONTINUOUS 1
 /** Set the number of patches */
 #define SUBSTRATE_NUMBER_OF_PATCHES 4
 /** stepsize for equilibration smoothing*/
 #define EQUILIBRATION_SMOOTHING_STEP 500
 /** slope (energy change per mc step) cutoff criterion for equilibration */
-#define EQUILIBRATION_THRESHOLD_SLOPE 5e-3
+#define EQUILIBRATION_THRESHOLD_SLOPE 5.0
 /** inner loop stepsize for equilibration */
 #define EQUILIBRATION_INNER_LOOP 500
 /** location for checkpoint after equilibration (maximum 300 chars) */
@@ -56,8 +56,8 @@
 #define PARTICLES_INIT_RANDOM 0
 
 /** define this if an old simulation should be loaded. If the number of particles in this simulation is different from the current one, random particles will be added or removed */
-#define CONTINUE
+//#define CONTINUE
 /** The file to load the old simulation from. If undefined, LOGFILE is used. You HAVE to do this if OLD_LOGFILE is the same as LOGFILE. */
-#define OLD_LOGFILE "./dev.h5"
+//#define OLD_LOGFILE "./dev.h5"
 /** The directory of the old simulation */
-#define OLD_LOGFILE_GROUP "/dev"
+//#define OLD_LOGFILE_GROUP "/dev"
