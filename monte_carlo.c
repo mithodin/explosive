@@ -359,6 +359,7 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 	int i=0,j=0;
 	printf("dmax: %8.5f amax: %7.5f  ",max_displacement,max_rotation);
 	fflush(NULL);
+	/*
 	while( j < 10 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
 		md_tmp=max_displacement;
 		max_displacement=0.0;
@@ -395,6 +396,31 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 	}
 	if(j==10 || i==100){
 		printf("[too many iterations] ");
+	}
+	*/
+	while( fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01 ){
+		acceptance_rate = mc_run(100,false);
+		md_tmp = max_displacement*acceptance_rate/target_acceptance_rate;
+		max_displacement = 0.0;
+		acceptance_rate = mc_run(200,false);
+		max_rotation *= acceptance_rate/tar_sqrt;
+		if( max_rotation > 2.0*M_PI ){
+			max_rotation = 2.0*M_PI;
+		}
+		max_displacement = md_tmp;
+		acceptance_rate = mc_run(100,false);
+		max_displacement *= acceptance_rate/target_acceptance_rate;
+		if( max_displacement > SIZE_X ){
+			max_displacement = SIZE_X;
+		}
+		printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
+		fflush(NULL);
+		if( j == 1000 ){ //this is going nowhere. starting over.
+			max_displacement=0.1;
+			max_rotation=M_PI; 
+			j = 0;
+			printf("\n> starting over.\n");
+		}
 	}
 	printf("done.\n");
 	return log_max_displacement();
