@@ -258,8 +258,9 @@ double energy_substrate_direct(vector2d r){
 
 double energy_single_well(double distance){
 	#if SUBSTRATE_CONTINUOUS == 1
-	double frc=energy_raw(cutoff_r);
-	return distance<SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:(distance>cutoff_r?0.0:(frc-energy_raw(distance))/(frc/ENERGY_WELL_DEPTH-1.0));
+	//double frc=energy_raw(cutoff_r);
+	//return distance<SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:(distance>cutoff_r?0.0:(frc-energy_raw(distance))/(frc/ENERGY_WELL_DEPTH-1.0));
+	return distance<SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:(distance>cutoff_r?0.0:energy_raw(distance)-energy_raw(cutoff_r)*(distance-SUBSTRATE_WELL_RADIUS)/(cutoff_r-SUBSTRATE_WELL_RADIUS));
 	#elif SUBSTRATE_CONTINUOUS == 0
 	return distance < SUBSTRATE_WELL_RADIUS?-ENERGY_WELL_DEPTH:0.0;
 	#else
