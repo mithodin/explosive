@@ -252,7 +252,7 @@ double energy_substrate_direct(vector2d r){
 		distance(r,patches[i],&d);
 		e+=energy_single_well(d);
 	}
-	return e<-ENERGY_WELL_DEPTH?-ENERGY_WELL_DEPTH:e;
+	return fabs(e)>fabs(ENERGY_WELL_DEPTH)?-ENERGY_WELL_DEPTH:e;
 	#endif
 }
 

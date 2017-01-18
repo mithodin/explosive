@@ -22,7 +22,7 @@
 /** This should be the sum of COLLOID_DIAMETER and COLLOID_PATCH_DIAMETER */
 #define COLLOID_MIN_BONDING_DISTANCE 1.11965683746373795115
 /** define the energy of a particle in a well on the substrate */
-#define ENERGY_WELL_DEPTH 1.0
+#define ENERGY_WELL_DEPTH -4.0
 /** define the energy of a single bond */
 #define ENERGY_BOND 1.0
 /** temperature in kbT */
@@ -36,7 +36,7 @@
 /** Location of the log file. Can be one global file for all your simulations, the system will handle it! */
 #define LOGFILE "./simulation_data.h5"
 /** Set substrate pattern. 0 = Random, 1 = Trigonal, 2 = Square */
-#define SUBSTRATE_PATTERN 0
+#define SUBSTRATE_PATTERN 1
 /** Define the radius of a well */
 #define SUBSTRATE_WELL_RADIUS 8.0
 /** Whether or not the potential should be continuous. 0 = Square well, 1 = Continuous 1/r^2, 2 = continuous r^2  */
