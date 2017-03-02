@@ -53,7 +53,7 @@ double max_rotation=M_PI; /**< maximum rotation during one mc move */
 double monte_carlo_step(void){
 	int accept=0;
 	int du_i=0;
-	doube du_e=0;
+	double du_e=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
 		new.position.v=_mm_add_pd(particles[i].position.v,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
@@ -365,45 +365,6 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 	int i=0,j=0;
 	printf("dmax: %8.5f amax: %7.5f  ",max_displacement,max_rotation);
 	fflush(NULL);
-	/*
-	while( j < 10 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
-		md_tmp=max_displacement;
-		max_displacement=0.0;
-		acceptance_rate=mc_run(100,false);
-		i=0;
-		while(i < 100 && fabs(acceptance_rate-tar_sqrt)/tar_sqrt > 0.01){
-			max_rotation*=acceptance_rate/tar_sqrt;
-			if( max_rotation > 2.0*M_PI ){
-				max_rotation = 2.0*M_PI;
-				break;
-			}
-			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",md_tmp,max_rotation,acceptance_rate*acceptance_rate*100);
-			fflush(NULL);
-			acceptance_rate=mc_run(100,false);
-			++i;
-		}
-		max_displacement=md_tmp;
-		acceptance_rate=mc_run(100,false);
-		printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
-		fflush(NULL);
-		i=0;
-		while( i < 100 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
-			max_displacement*=acceptance_rate/target_acceptance_rate;
-			if( max_displacement > SIZE_X ){
-				max_displacement = SIZE_X;
-				break;
-			}
-			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
-			fflush(NULL);
-			acceptance_rate=mc_run(100,false);
-			++i;
-		}
-		++j;
-	}
-	if(j==10 || i==100){
-		printf("[too many iterations] ");
-	}
-	*/
 	while( fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01 ){
 		acceptance_rate = mc_run(100,false);
 		md_tmp = max_displacement*acceptance_rate/target_acceptance_rate;
