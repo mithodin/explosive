@@ -23,8 +23,6 @@ dsfmt_t rng; /**< stores the RNG state */
 struct timeval sim_start_time; /**< stores the start of the simulation */
 int cluster_sizes[NUMBER_OF_PARTICLES]; /**< stores the cluster size distribution */
 
-int debug_int_energy = 0;
-
 int main(void){
 	gettimeofday(&sim_start_time,NULL);
 	dsfmt_init_gen_rand(&rng,get_random_seed()); //initialize the rng

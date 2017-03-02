@@ -164,7 +164,6 @@ void init_bonding_partners(void){
 				particles[j].bond_site[site2]=site1;
 				particles[i].internal_energy--;
 				particles[j].internal_energy--;
-				debug_int_energy--;
 			}
 		}
 	}
