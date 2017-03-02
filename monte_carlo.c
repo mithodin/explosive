@@ -52,6 +52,8 @@ double max_rotation=M_PI; /**< maximum rotation during one mc move */
  */
 double monte_carlo_step(void){
 	int accept=0;
+	int du_i=0;
+	double du_e=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
 		new.position.v=_mm_add_pd(particles[i].position.v,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
