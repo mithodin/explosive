@@ -52,6 +52,8 @@ double max_rotation=M_PI; /**< maximum rotation during one mc move */
  */
 double monte_carlo_step(void){
 	int accept=0;
+	int du_i=0;
+	doube du_e=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
 		new.position.v=_mm_add_pd(particles[i].position.v,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
@@ -70,35 +72,39 @@ double monte_carlo_step(void){
 		#endif
 		new.phi=angle_twopi(particles[i].phi+max_rotation*(dsfmt_genrand_open_close(&rng)-0.5));
 
-		if(mc_energy_change(&new,i) && ( (new.external_energy-particles[i].external_energy)+(new.internal_energy-particles[i].internal_energy)*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability((new.external_energy-particles[i].external_energy), (new.internal_energy-particles[i].internal_energy)) ) ){
-			particles[i].position=new.position;
-			particles[i].phi=new.phi;
-			particles[i].external_energy=new.external_energy;
-			particles[i].internal_energy=new.internal_energy;
-			particles[i].below->above=particles[i].above;
-			particles[i].above->below=particles[i].below;
-			insert_sorted_y(&(particles[i]),particles[i].below);
+		if( mc_energy_change(&new,i) ){
+			du_i = new.internal_energy-particles[i].internal_energy;
+			du_e = new.external_energy-particles[i].external_energy;
+			if( du_e+du_i*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability(du_e, du_i) ){
+				particles[i].position=new.position;
+				particles[i].phi=new.phi;
+				particles[i].external_energy=new.external_energy;
+				particles[i].internal_energy=new.internal_energy;
+				particles[i].below->above=particles[i].above;
+				particles[i].above->below=particles[i].below;
+				insert_sorted_y(&(particles[i]),particles[i].below);
 
-			//remove old bonding partners
-			for(int k=0;k<3;++k){
-				Colloid *partner=particles[i].bonding_partner[k];
-				if(partner!=NULL){
-					partner->bonding_partner[particles[i].bond_site[k]]=NULL;
-					partner->internal_energy++;
+				//remove old bonding partners
+				for(int k=0;k<3;++k){
+					Colloid *partner=particles[i].bonding_partner[k];
+					if(partner!=NULL){
+						partner->bonding_partner[particles[i].bond_site[k]]=NULL;
+						partner->internal_energy++;
+					}
 				}
-			}
-			//make new bonds
-			for(int k=0;k<3;++k){
-				Colloid *partner=new.bonding_partner[k];
-				particles[i].bonding_partner[k]=partner;
-				particles[i].bond_site[k]=new.bond_site[k];
-				if(partner!=NULL){
-					partner->bonding_partner[new.bond_site[k]]=&(particles[i]);
-					partner->bond_site[new.bond_site[k]]=k;
-					partner->internal_energy--;
+				//make new bonds
+				for(int k=0;k<3;++k){
+					Colloid *partner=new.bonding_partner[k];
+					particles[i].bonding_partner[k]=partner;
+					particles[i].bond_site[k]=new.bond_site[k];
+					if(partner!=NULL){
+						partner->bonding_partner[new.bond_site[k]]=&(particles[i]);
+						partner->bond_site[new.bond_site[k]]=k;
+						partner->internal_energy--;
+					}
 				}
+				++accept;
 			}
-			++accept;
 		}
 	}
 	return 1.0*accept/NUMBER_OF_PARTICLES;
