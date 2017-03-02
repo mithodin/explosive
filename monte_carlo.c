@@ -52,6 +52,8 @@ double max_rotation=M_PI; /**< maximum rotation during one mc move */
  */
 double monte_carlo_step(void){
 	int accept=0;
+	int du_i=0;
+	double du_e=0;
 	for(int i=0;i<NUMBER_OF_PARTICLES;++i){
 		Colloid new=EMPTY_COLLOID;
 		new.position.v=_mm_add_pd(particles[i].position.v,_mm_set_pd(max_displacement*(dsfmt_genrand_open_close(&rng)-0.5),max_displacement*(dsfmt_genrand_open_close(&rng)-0.5)));
@@ -70,35 +72,40 @@ double monte_carlo_step(void){
 		#endif
 		new.phi=angle_twopi(particles[i].phi+max_rotation*(dsfmt_genrand_open_close(&rng)-0.5));
 
-		if(mc_energy_change(&new,i) && ( (new.external_energy-particles[i].external_energy)+(new.internal_energy-particles[i].internal_energy)*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability((new.external_energy-particles[i].external_energy), (new.internal_energy-particles[i].internal_energy)) ) ){
-			particles[i].position=new.position;
-			particles[i].phi=new.phi;
-			particles[i].external_energy=new.external_energy;
-			particles[i].internal_energy=new.internal_energy;
-			particles[i].below->above=particles[i].above;
-			particles[i].above->below=particles[i].below;
-			insert_sorted_y(&(particles[i]),particles[i].below);
+		if(mc_energy_change(&new,i)){
+			du_i = new.internal_energy-particles[i].internal_energy;
+			du_e = new.external_energy-particles[i].external_energy;
+			if(du_e+du_i*ENERGY_BOND <= 0 || dsfmt_genrand_open_close(&rng) <= mc_acceptance_probability(du_e, du_i)){
+				particles[i].position=new.position;
+				particles[i].phi=new.phi;
+				particles[i].external_energy=new.external_energy;
+				particles[i].internal_energy=new.internal_energy;
+				particles[i].below->above=particles[i].above;
+				particles[i].above->below=particles[i].below;
+				insert_sorted_y(&(particles[i]),particles[i].below);
 
-			//remove old bonding partners
-			for(int k=0;k<3;++k){
-				Colloid *partner=particles[i].bonding_partner[k];
-				if(partner!=NULL){
-					partner->bonding_partner[particles[i].bond_site[k]]=NULL;
-					partner->internal_energy++;
+				//remove old bonding partners
+				for(int k=0;k<3;++k){
+					Colloid *partner=particles[i].bonding_partner[k];
+					if(partner!=NULL){
+						partner->bonding_partner[particles[i].bond_site[k]]=NULL;
+						partner->internal_energy++;
+					}
 				}
-			}
-			//make new bonds
-			for(int k=0;k<3;++k){
-				Colloid *partner=new.bonding_partner[k];
-				particles[i].bonding_partner[k]=partner;
-				particles[i].bond_site[k]=new.bond_site[k];
-				if(partner!=NULL){
-					partner->bonding_partner[new.bond_site[k]]=&(particles[i]);
-					partner->bond_site[new.bond_site[k]]=k;
-					partner->internal_energy--;
+				//make new bonds
+				for(int k=0;k<3;++k){
+					Colloid *partner=new.bonding_partner[k];
+					particles[i].bonding_partner[k]=partner;
+					particles[i].bond_site[k]=new.bond_site[k];
+					if(partner!=NULL){
+						partner->bonding_partner[new.bond_site[k]]=&(particles[i]);
+						partner->bond_site[new.bond_site[k]]=k;
+						partner->internal_energy--;
+					}
 				}
+				++accept;
+				debug_int_energy+=du_i;
 			}
-			++accept;
 		}
 	}
 	return 1.0*accept/NUMBER_OF_PARTICLES;
@@ -359,45 +366,6 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 	int i=0,j=0;
 	printf("dmax: %8.5f amax: %7.5f  ",max_displacement,max_rotation);
 	fflush(NULL);
-	/*
-	while( j < 10 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
-		md_tmp=max_displacement;
-		max_displacement=0.0;
-		acceptance_rate=mc_run(100,false);
-		i=0;
-		while(i < 100 && fabs(acceptance_rate-tar_sqrt)/tar_sqrt > 0.01){
-			max_rotation*=acceptance_rate/tar_sqrt;
-			if( max_rotation > 2.0*M_PI ){
-				max_rotation = 2.0*M_PI;
-				break;
-			}
-			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",md_tmp,max_rotation,acceptance_rate*acceptance_rate*100);
-			fflush(NULL);
-			acceptance_rate=mc_run(100,false);
-			++i;
-		}
-		max_displacement=md_tmp;
-		acceptance_rate=mc_run(100,false);
-		printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
-		fflush(NULL);
-		i=0;
-		while( i < 100 && fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01){
-			max_displacement*=acceptance_rate/target_acceptance_rate;
-			if( max_displacement > SIZE_X ){
-				max_displacement = SIZE_X;
-				break;
-			}
-			printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
-			fflush(NULL);
-			acceptance_rate=mc_run(100,false);
-			++i;
-		}
-		++j;
-	}
-	if(j==10 || i==100){
-		printf("[too many iterations] ");
-	}
-	*/
 	while( fabs(acceptance_rate-target_acceptance_rate)/target_acceptance_rate > 0.01 ){
 		acceptance_rate = mc_run(100,false);
 		md_tmp = max_displacement*acceptance_rate/target_acceptance_rate;
@@ -415,6 +383,7 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 		}
 		printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
 		fflush(NULL);
+		j+=1;
 		if( j == 1000 ){ //this is going nowhere. starting over.
 			max_displacement=0.1;
 			max_rotation=M_PI; 

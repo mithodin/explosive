@@ -286,7 +286,7 @@ bool h5log_log_cluster_size(void){
  * @param bonding_probability The probability that any given bond is satisfied in this frame
  * @return Was the frame successfully logged?
  */
-bool h5log_log_frame(Colloid *log_particles, int mc_time, unsigned long execution_time, int largest_cluster, double bonding_probability){
+bool h5log_log_frame(Colloid *log_particles, int mc_time, unsigned long execution_time, int largest_cluster, double bonding_probability, int debug_internal_energy){
 	SimulationFrame sf[1];
 	sf[0].frame_index=mc_time;
 	sf[0].realtime_seconds=execution_time;
@@ -310,6 +310,9 @@ bool h5log_log_frame(Colloid *log_particles, int mc_time, unsigned long executio
 				     sizeof(sf[0].realtime_seconds),
 				     sizeof(sf[0].largest_cluster),
 				     sizeof(sf[0].bonding_probability)};
+
+	fprintf(stderr,"%d\t%1.10e\t%d\t%1.10e\n",mc_time,sf[0].internal_energy,-debug_internal_energy,bonding_probability);
+	fflush(stderr);
 
 	herr_t status = H5TBappend_records(group, simulation_frames_location, 1, simframe_size, simframe_offsets, simframe_sizes, &sf);
 	if(status < 0){ printf("> H5Log experienced an error loggin a frame\n"); return false; }
