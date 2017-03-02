@@ -30,6 +30,7 @@ int time_index[LOG_BUFFER_SIZE]; /**< Buffer to store mc time index */
 unsigned long real_time[LOG_BUFFER_SIZE]; /**< Buffer to store real time */
 int buf_largest_cluster[LOG_BUFFER_SIZE]; /**< Buffer to store largest cluster */
 double buf_bonding_probability[LOG_BUFFER_SIZE]; /**< Buffer to store bonding probability */
+int buf_debug_int_energy[LOG_BUFFER_SIZE]; /**< DEBUG */
 int simulation_last_frame; /**< Store this so we know when to stop the worker thread */
 
 /**
@@ -56,7 +57,7 @@ void *log_logging(void *arg){
 	*ret_status=-1;
 	while(true){
 		sem_wait(&log_buffer_empty);
-		if( !h5log_log_frame(state_buffer[log_buffer_read_index], time_index[log_buffer_read_index], real_time[log_buffer_read_index], buf_largest_cluster[log_buffer_read_index], buf_bonding_probability[log_buffer_read_index])){
+		if( !h5log_log_frame(state_buffer[log_buffer_read_index], time_index[log_buffer_read_index], real_time[log_buffer_read_index], buf_largest_cluster[log_buffer_read_index], buf_bonding_probability[log_buffer_read_index], buf_debug_int_energy[log_buffer_read_index])){
 			printf("> error writing to hdf5 log\n");
 			*ret_status=-1;
 			return (void *)ret_status;
@@ -104,6 +105,7 @@ void log_enqueue(int mc_time, bool simulation_done, unsigned long runtime, int l
 	real_time[log_buffer_write_index]=runtime;
 	buf_largest_cluster[log_buffer_write_index]=largest_cluster;
 	buf_bonding_probability[log_buffer_write_index]=bonding_probability;
+	buf_debug_int_energy[log_buffer_write_index]=debug_int_energy;
 	if(simulation_done){
 		simulation_last_frame=mc_time;
 	}

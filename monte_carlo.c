@@ -382,6 +382,7 @@ bool mc_init_max_displacement(double target_acceptance_rate){
 		}
 		printf("\r> initializing maximum displacement... dmax: %8.5f amax: %7.5f ar: %3.0f%% ",max_displacement,max_rotation,acceptance_rate*100);
 		fflush(NULL);
+		j+=1;
 		if( j == 1000 ){ //this is going nowhere. starting over.
 			max_displacement=0.1;
 			max_rotation=M_PI; 
